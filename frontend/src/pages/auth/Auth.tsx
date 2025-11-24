@@ -259,7 +259,7 @@ export default function AuthPage() {
 
               <button
                 onClick={handleSubmit}
-                className="w-full bg-linear-to-r from-blue-600 to-indigo-600 text-white py-3.5 rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transform hover:scale-[1.02] transition-all duration-300 shadow-lg hover:shadow-xl flex-shrink-0"
+                className="w-full bg-linear-to-r from-blue-600 to-indigo-600 text-white py-3.5 rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transform hover:scale-[1.02] transition-all duration-300 shadow-lg hover:shadow-xl shrink-0"
               >
                 {isSignUp ? 'Create Account' : 'Sign In'}
               </button>
