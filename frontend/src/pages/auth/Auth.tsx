@@ -4,6 +4,7 @@ import userService from "@/services/userService";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { AUTH_ROUTES } from "@/constants/apiRoutes";
+import { useAuth } from '@/context/authContext';
 
 type Role = "user" | "service_provider";
 
@@ -12,6 +13,7 @@ export default function ServiceLinkAuthPage() {
   const [userType, setUserType] = useState<Role>("user");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth(); 
 
   const [formData, setFormData] = useState({
     name: "",
@@ -31,45 +33,49 @@ export default function ServiceLinkAuthPage() {
   // -----------------------------------
   // LOGIN
   // -----------------------------------
-  const handleLogin = async (e: React.MouseEvent) => {
-    e.preventDefault();
+ const handleLogin = async (e: React.MouseEvent) => {
+  e.preventDefault();
 
-    if (!formData.email || !formData.password) {
-      toast.error("Please enter your email and password");
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const response = await userService.login(formData.email, formData.password);
-
-  if (!response.success) {
-    toast.error(response.message);
+  if (!formData.email.trim() || !formData.password.trim()) {
+    toast.error("Please enter your email and password");
     return;
   }
 
-      const { accessToken, user } = response.data;
+  setLoading(true);
 
-      localStorage.setItem("auth_token", accessToken);
-      localStorage.setItem("auth_user", JSON.stringify(user));
+  try {
+    const response = await userService.login(formData.email, formData.password);
 
-      toast.success("Login successful!");
-
-      if (user.role === "admin") navigate("/admin/dashboard");
-      else if (user.role === "service_provider") navigate("/provider/home");
-      else navigate("/user/home");
-
-    } catch (error: any) {
-      const msg =
-        error?.response?.data?.message ||
-        "Invalid email or password";
-
-      toast.error(msg);
-    } finally {
-      setLoading(false);
+    if (!response?.success) {
+      toast.error(response?.message || "Login failed");
+      return;
     }
-  };
+
+    const { accessToken, user } = response.data;
+
+    if (!accessToken || !user) {
+      toast.error("Unexpected server response");
+      return;
+    }
+
+    // 🔥 IMPORTANT FIX
+    login(accessToken, user);
+
+    toast.success("Login successful!");
+
+    if (user.role === "admin") navigate("/admin/dashboard");
+    else if (user.role === "service_provider") navigate("/provider/home");
+    else navigate("/user/home");
+
+  } catch (error: any) {
+    const message = error?.response?.data?.message || error?.message || "Login failed";
+    toast.error(message);
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 
   // -----------------------------------
   // SIGNUP → OTP
