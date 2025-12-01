@@ -1,0 +1,23 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.User = void 0;
+//user.schema.ts
+const mongoose_1 = require("mongoose");
+const roles_1 = require("../constants/roles");
+const UserSchema = new mongoose_1.Schema({
+    username: { type: String, required: true },
+    email: { type: String, required: true, unique: true },
+    phone: { type: String },
+    password: { type: String, required: true },
+    role: {
+        type: String,
+        enum: Object.values(roles_1.UserRole),
+        default: roles_1.UserRole.USER,
+        required: true
+    },
+    serviceType: { type: String },
+    isBlocked: { type: Boolean, default: false },
+    resetPasswordToken: { type: String },
+    resetPasswordExpires: { type: Date },
+}, { timestamps: true });
+exports.User = (0, mongoose_1.model)("User", UserSchema);

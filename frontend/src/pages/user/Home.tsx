@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { 
   Wrench, 
   Search, 
@@ -17,7 +19,8 @@ import {
   ChevronRight,
   Filter,
   Menu,
-  X
+  X,
+  LogOut
 } from 'lucide-react';
 
 interface ServiceProvider {
@@ -111,9 +114,32 @@ const providers: ServiceProvider[] = [
 ];
 
 export default function HomePage() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+
+  // Check authentication on mount
+  useEffect(() => {
+    const authUser = localStorage.getItem('auth_user');
+    const authToken = localStorage.getItem('auth_token');
+
+    if (!authUser || !authToken) {
+      toast.error('Please login first');
+      navigate('/auth');
+      return;
+    }
+
+    setUser(JSON.parse(authUser));
+  }, [navigate]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('auth_token');
+    localStorage.removeItem('auth_user');
+    toast.success('Logged out successfully');
+    navigate('/auth');
+  };
 
   const filteredProviders = providers.filter(provider => {
     const matchesSearch = provider.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -162,7 +188,14 @@ export default function HomePage() {
               </button>
               <button className="hidden md:flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors">
                 <User className="w-5 h-5 text-gray-700" />
-                <span className="font-medium text-gray-700">Profile</span>
+                <span className="font-medium text-gray-700">{user?.username || 'Profile'}</span>
+              </button>
+              <button
+                onClick={handleLogout}
+                className="hidden md:flex items-center gap-2 px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-lg transition-colors"
+              >
+                <LogOut className="w-5 h-5" />
+                Logout
               </button>
               <button 
                 className="md:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
