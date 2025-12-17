@@ -3,17 +3,23 @@ export interface IUserRepository {
   createUser(user: IUserModel): Promise<IUserModel>;
   findByEmail(email: string): Promise<IUserModel | null>;
   findById(id: string): Promise<IUserModel | null>;
+  findPublicById(id: string): Promise<Omit<IUserModel, "password"> | null>;
+  updateByIdPublic(
+    id: string,
+    update: Partial<IUserModel>
+  ): Promise<Omit<IUserModel, "password"> | null>;
 
-//   getAllUsers(
-//     page?: number,
-//     limit?: number,
-//     search?: string
-//   ): Promise<{
-//     users: Omit<IUserModel, "password">[];
-//     total: number;
-//     page: number;
-//     totalPages: number;
-//   }>;
+  listProviders(options: {
+    search?: string;
+    serviceType?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{
+    providers: Omit<IUserModel, "password">[];
+    total: number;
+    page: number;
+    totalPages: number;
+  }>;
 
   updateUserBlockStatus(
     userId: string,
@@ -22,10 +28,8 @@ export interface IUserRepository {
 
   deleteUser(userId: string): Promise<void>;
 
-//   getUserStats(): Promise<{
-//     totalUsers: number;
-//     totalDoctors: number;
-//     totalPatients: number;
-//     blockedUsers: number;
-//   }>;
+  updateUsername(
+    userId: string,
+    username: string
+  ): Promise<Omit<IUserModel, "password"> | null>;
 }
