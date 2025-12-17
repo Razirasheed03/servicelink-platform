@@ -23,7 +23,7 @@ export default function ProviderHome() {
         <ProviderNavbar />
 
         {/* Content */}
-        <div className="p-6 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex-1">
+        <div className="p-6 bg-linear-to-br from-blue-50 via-indigo-50 to-purple-50 flex-1">
           <div className="max-w-6xl mx-auto">
 
             {/* Welcome Header */}
