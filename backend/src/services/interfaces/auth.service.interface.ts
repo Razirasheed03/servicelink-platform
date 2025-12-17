@@ -1,4 +1,3 @@
-//services/interfaces/auth.service.interface.ts
 import { IUserModel } from "../../models/interfaces/user.model.interface";
 
 export interface IAuthService {
@@ -9,6 +8,5 @@ export interface IAuthService {
   login(email: string, password: string): Promise<{ accessToken: string; refreshToken: string; user: IUserModel }>;
   forgotPassword(email: string): Promise<void>;
   resetPassword(id: string, token: string, newPassword: string): Promise<void>;
-   googleLogin(idToken: string): Promise<{ accessToken: string; refreshToken: string; user: any }>;
- 
+  googleLogin(idToken: string): Promise<{ accessToken: string; refreshToken: string; user: any }>;
 }
