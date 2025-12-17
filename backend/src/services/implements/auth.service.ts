@@ -1,4 +1,3 @@
-//services/implements/auth.service.ts
 import { IAuthService } from "../interfaces/auth.service.interface";
 import bcrypt from "bcryptjs";
 import redisClient from "../../config/redisClient";
@@ -13,47 +12,45 @@ import { IUserRepository } from "../../repositories/interface/user.repository.in
 import { IUserModel } from "../../models/interfaces/user.model.interface";
 import { OAuth2Client } from "google-auth-library";
 
-const googleClient = new OAuth2Client({
-  clientId: process.env.GOOGLE_CLIENT_ID!,
-});
+const googleClient = new OAuth2Client({ clientId: process.env.GOOGLE_CLIENT_ID! });
+
 export class AuthService implements IAuthService {
   constructor(private _userRepo: IUserRepository) {}
 
-signup = async (user: Omit<SignupInput, "confirmPassword">) => {
-  const existing = await this._userRepo.findByEmail(user.email);
-  if (existing) throw new Error("User already exists");
+  signup = async (user: Omit<SignupInput, "confirmPassword">) => {
+    const existing = await this._userRepo.findByEmail(user.email);
+    if (existing) throw new Error("User already exists");
 
-  const otp = randomInt(100000, 999999).toString();
-  const hashedPassword = await bcrypt.hash(user.password, 10);
+    const otp = randomInt(100000, 999999).toString();
+    const hashedPassword = await bcrypt.hash(user.password, 10);
 
-  const key = `signup:${user.email}`;
-  const createdAt = Date.now();
+    const key = `signup:${user.email}`;
+    const createdAt = Date.now();
 
-  const userData = {
-    username: user.name,      // 🔥 FIXED
-    email: user.email,
-    phone: user.phone,
-    password: hashedPassword,
-    role: user.role,
-    serviceType: user.serviceType || null,
-    isBlocked: false,
+    const userData = {
+      username: user.name,     
+      email: user.email,
+      phone: user.phone,
+      password: hashedPassword,
+      role: user.role,
+      serviceType: user.serviceType || null,
+      isBlocked: false,
+    };
+
+    await redisClient.setEx(
+      key,
+      300,
+      JSON.stringify({
+        ...userData,
+        otp,
+        createdAt,
+      })
+    );
+
+    await sendOtpEmail(user.email, otp);
+    console.log('otp send',otp);
+    return { success: true, message: "OTP sent to email" };
   };
-
-  await redisClient.setEx(
-    key,
-    300,
-    JSON.stringify({
-      ...userData,
-      otp,
-      createdAt,
-    })
-  );
-
-  await sendOtpEmail(user.email, otp);
-
-  return { success: true, message: "OTP sent to email" };
-};
-
 
   verifyOtp = async (
     email: string,
@@ -94,9 +91,9 @@ signup = async (user: Omit<SignupInput, "confirmPassword">) => {
       refreshToken
     );
     await redisClient.del(key);
-    // Return both tokens
     return { accessToken, refreshToken, user: createdUser };
   };
+
   resendOtp = async (email: string) => {
     const key = `signup:${email}`;
     const redisData = await redisClient.get(key);
@@ -112,6 +109,7 @@ signup = async (user: Omit<SignupInput, "confirmPassword">) => {
 
     await sendOtpEmail(email, otp);
   };
+
   refreshToken = async (
     refreshToken: string
   ): Promise<{ accessToken: string }> => {
@@ -141,6 +139,7 @@ signup = async (user: Omit<SignupInput, "confirmPassword">) => {
     const accessToken = generateAccessToken(userId);
     return { accessToken };
   };
+
   login = async (
     email: string,
     password: string
@@ -169,6 +168,7 @@ signup = async (user: Omit<SignupInput, "confirmPassword">) => {
 
     return { accessToken, refreshToken, user };
   };
+
   googleLogin = async (
     idToken: string
   ): Promise<{
