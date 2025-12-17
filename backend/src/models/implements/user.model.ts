@@ -1,4 +1,3 @@
-//models/implements/user.model.ts
 import { Model } from "mongoose";
 
 import { User } from "../../schema/user.schema";
