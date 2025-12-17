@@ -1,4 +1,3 @@
-// src/repositories/implements/UserRepository.ts
 import { BaseRepository } from "../baseRepository";
 import { IUserRepository } from "../interface/user.repository.interface";
 
@@ -23,45 +22,77 @@ export class UserRepository extends BaseRepository<IUserModel> implements IUserR
     return await this.model.findById(id);
   }
 
-//   async getAllUsers(
-//     page = 1,
-//     limit = 10,
-//     search = ""
-//   ): Promise<{
-//     users: Omit<IUserModel, "password">[];
-//     total: number;
-//     page: number;
-//     totalPages: number;
-//   }> {
-//     const skip = (page - 1) * limit;
+  async findPublicById(id: string): Promise<Omit<IUserModel, "password"> | null> {
+    const user = await this.model.findById(id).select("-password");
+    return user ? (user.toObject() as Omit<IUserModel, "password">) : null;
+  }
 
-//     const searchQuery = search
-//       ? {
-//           $or: [
-//             { username: { $regex: search, $options: "i" } },
-//             { email: { $regex: search, $options: "i" } }
-//           ]
-//         }
-//       : {};
+  async updateByIdPublic(
+    id: string,
+    update: Partial<IUserModel>
+  ): Promise<Omit<IUserModel, "password"> | null> {
+    const updated = await this.model
+      .findByIdAndUpdate(id, { $set: update }, {
+        new: true,
+        runValidators: true,
+        context: "query",
+      })
+      .select("-password");
+    return updated ? (updated.toObject() as Omit<IUserModel, "password">) : null;
+  }
 
-//     const users = await UserModel
-//       .find(searchQuery)
-//       .select("-password")
-//       .sort({ createdAt: -1 })
-//       .skip(skip)
-//       .limit(limit)
-//       .lean();
+  async listProviders(options: {
+    search?: string;
+    serviceType?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{
+    providers: Omit<IUserModel, "password">[];
+    total: number;
+    page: number;
+    totalPages: number;
+  }> {
+    const page = Math.max(1, options.page || 1);
+    const limit = Math.max(1, Math.min(50, options.limit || 12));
+    const skip = (page - 1) * limit;
 
-//     const total = await UserModel.countDocuments(searchQuery);
-//     const totalPages = Math.ceil(total / limit);
+    const filters: any = {
+      role: UserRole.SERVICE_PROVIDER,
+      isBlocked: false,
+    };
 
-//     return {
-//       users: users as Omit<IUserModel, "password">[],
-//       total,
-//       page,
-//       totalPages
-//     };
-//   }
+    if (options.serviceType) {
+      filters.serviceType = options.serviceType;
+    }
+
+    if (options.search) {
+      const q = options.search.trim();
+      filters.$or = [
+        { username: { $regex: q, $options: "i" } },
+        { email: { $regex: q, $options: "i" } },
+        { serviceType: { $regex: q, $options: "i" } },
+        { location: { $regex: q, $options: "i" } },
+      ];
+    }
+
+    const [items, total] = await Promise.all([
+      this.model
+        .find(filters)
+        .select("-password")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      this.model.countDocuments(filters),
+    ]);
+
+    return {
+      providers: items as Omit<IUserModel, "password">[],
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
 
   async updateUserBlockStatus(userId: string, isBlocked: boolean): Promise<Omit<IUserModel, "password">> {
     const user = await UserModel.findByIdAndUpdate(
@@ -84,27 +115,7 @@ export class UserRepository extends BaseRepository<IUserModel> implements IUserR
     }
   }
 
-//   async getUserStats(): Promise<{
-//     totalUsers: number;
-//     totalDoctors: number;
-//     totalPatients: number;
-//     blockedUsers: number;
-//   }> {
-//     const [totalUsers, totalDoctors, totalPatients, blockedUsers] = await Promise.all([
-//       UserModel.countDocuments({}),
-//       UserModel.countDocuments({ role: UserRole.SERVICE_PROVIDER }),
-//       UserModel.countDocuments({ role: UserRole.USER }),
-//       UserModel.countDocuments({ isBlocked: true })
-//     ]);
-
-//     return {
-//       totalUsers,
-//       totalDoctors,
-//       totalPatients,
-//       blockedUsers
-//     };
-//   }
-   async updateUsername(userId: string, username: string) {
+  async updateUsername(userId: string, username: string) {
     const updated = await this.model
       .findByIdAndUpdate(
         userId,
