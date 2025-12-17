@@ -1,4 +1,3 @@
-//src/routes/auth.route.ts
 import { Router } from "express";
 import { asyncHandler } from "../utils/asyncHandler";
 import { authController } from "../dependencies/auth.di";
