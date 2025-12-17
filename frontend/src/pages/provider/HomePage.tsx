@@ -1,5 +1,5 @@
-import ProviderSidebar from "./ProviderSidebar";
-import ProviderNavbar from "./ProviderNavbar";
+import ProviderSidebar from "../../components/provider/Sidebar";
+import ProviderNavbar from "../../components/provider/Navbar";
 import {
   Calendar,
   ClipboardList,
