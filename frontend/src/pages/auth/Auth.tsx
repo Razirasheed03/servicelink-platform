@@ -312,12 +312,12 @@ export default function ServiceLinkAuthPage() {
             </button>
 
             {/* Google */}
-            <button
+            {/* <button
               onClick={handleGoogleLogin}
               className="w-full bg-white border rounded-xl py-3 mt-2 shadow-sm"
             >
               Continue with Google
-            </button>
+            </button> */}
 
           </div>
         </div>
