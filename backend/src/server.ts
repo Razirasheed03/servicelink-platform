@@ -1,4 +1,3 @@
-//backend/server.ts
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -6,10 +5,10 @@ import { connectDB } from "./config/mongodb";
 import { env } from "./config/env";
 
 import authRoutes from "./routes/auth.route";
+import userRoutes from "./routes/user.route";
 
 const app = express();
 
-// ✅ CORS Configuration - Allow frontend to communicate with backend
 const corsOptions = {
   origin: [
     "http://localhost:5173",  // Vite frontend default
@@ -34,8 +33,8 @@ connectDB()
     process.exit(1);
   });
 
-// API Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/user", userRoutes);
 
 // Global Error Handler
 app.use((err: any, _req: any, res: any, _next: any) => {
