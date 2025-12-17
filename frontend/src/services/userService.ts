@@ -10,6 +10,13 @@ export type SignupPayload = {
   serviceType?: string;
 };
 
+export type UpdateProfilePayload = {
+  phone?: string;
+  serviceType?: string;
+  location?: string;
+  experience?: number;
+};
+
 const userService = {
   login: async (email: string, password: string) => {
     try {
@@ -58,6 +65,48 @@ const userService = {
       return {
         success: false,
         message: error?.response?.data?.message || "Failed to resend OTP",
+        data: null,
+      };
+    }
+  },
+
+  updateProfile: async (payload: UpdateProfilePayload) => {
+    try {
+      const res = await httpClient.put("/user/update", payload);
+      return res.data;
+    } catch (error: any) {
+      return {
+        success: false,
+        message:
+          error?.response?.data?.message || "Profile update failed",
+        data: null,
+      };
+    }
+  },
+
+  getProviders: async (params: { search?: string; serviceType?: string; page?: number; limit?: number }) => {
+    try {
+      const res = await httpClient.get("/user/providers", { params });
+      return res.data;
+    } catch (error: any) {
+      return {
+        success: false,
+        message:
+          error?.response?.data?.message || "Failed to fetch providers",
+        data: null,
+      };
+    }
+  },
+
+  getProviderById: async (id: string) => {
+    try {
+      const res = await httpClient.get(`/user/providers/${id}`);
+      return res.data;
+    } catch (error: any) {
+      return {
+        success: false,
+        message:
+          error?.response?.data?.message || "Failed to fetch provider",
         data: null,
       };
     }
