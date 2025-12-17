@@ -12,5 +12,4 @@ const requireEnvVar = (key: string) => {
 export const env = {
     PORT: requireEnvVar("PORT"),
     MONGO_URI: requireEnvVar("MONGO_URI"),
-
 }
