@@ -1,4 +1,3 @@
-//models/interface/user.model.interface.ts
 import { Document } from "mongoose";
 import { UserRole } from "../../constants/roles";
 
@@ -10,6 +9,8 @@ export interface IUserModel extends Document {
   password: string;
   role: UserRole;
   serviceType?: string;
+  location?: string;
+  experience?: number;
   isBlocked?: boolean;
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
