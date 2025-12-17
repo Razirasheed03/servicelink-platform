@@ -6,6 +6,10 @@ interface AuthUser {
   username?: string;
   email?: string;
   role?: Role;
+  phone?: string;
+  serviceType?: string;
+  experience?: number;
+  location?: string;
   isBlocked?: boolean;
   createdAt?: string;
   updatedAt?: string;
