@@ -17,6 +17,8 @@ const UserSchema = new Schema<IUserModel>(
     },
 
     serviceType: { type: String },
+    location: { type: String },
+    experience: { type: Number, min: 0 },
     isBlocked: { type: Boolean, default: false },
     resetPasswordToken: { type: String },
     resetPasswordExpires: { type: Date },
