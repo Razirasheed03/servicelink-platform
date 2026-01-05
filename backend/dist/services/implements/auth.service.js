@@ -33,9 +33,7 @@ const jwt_1 = require("../../utils/jwt");
 const crypto_2 = __importDefault(require("crypto"));
 const sendResetPasswordLink_1 = require("../../utils/sendResetPasswordLink");
 const google_auth_library_1 = require("google-auth-library");
-const googleClient = new google_auth_library_1.OAuth2Client({
-    clientId: process.env.GOOGLE_CLIENT_ID,
-});
+const googleClient = new google_auth_library_1.OAuth2Client({ clientId: process.env.GOOGLE_CLIENT_ID });
 class AuthService {
     constructor(_userRepo) {
         this._userRepo = _userRepo;
@@ -47,20 +45,19 @@ class AuthService {
             const hashedPassword = yield bcryptjs_1.default.hash(user.password, 10);
             const key = `signup:${user.email}`;
             const createdAt = Date.now();
-            // Map 'name' from SignupInput to 'username' for database storage
             const userData = {
                 username: user.name,
                 email: user.email,
                 phone: user.phone,
                 password: hashedPassword,
                 role: user.role,
-                serviceType: user.serviceType,
+                serviceType: user.serviceType || null,
                 isBlocked: false,
             };
-            const result = yield redisClient_1.default.setEx(key, 300, JSON.stringify(Object.assign(Object.assign({}, userData), { otp,
+            yield redisClient_1.default.setEx(key, 300, JSON.stringify(Object.assign(Object.assign({}, userData), { otp,
                 createdAt })));
-            console.log(result, otp);
             yield (0, sendEmail_1.sendOtpEmail)(user.email, otp);
+            console.log('otp send', otp);
             return { success: true, message: "OTP sent to email" };
         });
         this.verifyOtp = (email, otp) => __awaiter(this, void 0, void 0, function* () {
@@ -83,7 +80,6 @@ class AuthService {
             yield redisClient_1.default.setEx(`refresh:${createdUser.id}`, 7 * 24 * 60 * 60, // 7 days in seconds
             refreshToken);
             yield redisClient_1.default.del(key);
-            // Return both tokens
             return { accessToken, refreshToken, user: createdUser };
         });
         this.resendOtp = (email) => __awaiter(this, void 0, void 0, function* () {

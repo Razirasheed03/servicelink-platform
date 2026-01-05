@@ -21,12 +21,14 @@ const ServiceProviderProfilePage: React.FC = () => {
 
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [formData, setFormData] = useState({
-    phone: user?.phone || "",
-    location: user?.location || "",
-    serviceType: user?.serviceType || "",
-    experience: user?.experience ? String(user.experience) : "",
-  });
+const [formData, setFormData] = useState({
+  username: user?.username || "",
+  phone: user?.phone || "",
+  location: user?.location || "",
+  serviceType: user?.serviceType || "",
+  experience: user?.experience ? String(user.experience) : "",
+});
+
 
   const profile: ServiceProviderProfile = {
     username: user?.username || "",
@@ -46,6 +48,7 @@ const ServiceProviderProfilePage: React.FC = () => {
 
   const handleEditClick = () => {
     setFormData({
+      username: user?.username || "",
       phone: user?.phone || "",
       location: user?.location || "",
       serviceType: user?.serviceType || "",
@@ -64,6 +67,7 @@ const ServiceProviderProfilePage: React.FC = () => {
     setSaving(true);
     try {
       const payload = {
+        username: formData.username || undefined,
         phone: formData.phone || undefined,
         location: formData.location || undefined,
         serviceType: formData.serviceType || undefined,
@@ -139,9 +143,20 @@ const ServiceProviderProfilePage: React.FC = () => {
 
                     {/* Name and Service Type */}
                     <div className="mb-4">
-                      <h2 className="text-2xl md:text-3xl font-bold text-gray-800">
-                        {profile.username}
-                      </h2>
+                    {isEditing ? (
+  <input
+    type="text"
+    name="username"
+    value={formData.username}
+    onChange={handleChange}
+    className="text-2xl md:text-3xl font-bold text-gray-800 bg-transparent border-b-2 border-indigo-300 focus:outline-none focus:border-indigo-600"
+  />
+) : (
+  <h2 className="text-2xl md:text-3xl font-bold text-gray-800">
+    {profile.username}
+  </h2>
+)}
+
                       <p className="text-lg text-indigo-600 font-semibold capitalize">
                         {profile.serviceType}
                       </p>

@@ -3,7 +3,7 @@ import { IUserService } from "../../services/interfaces/user.service.interface";
 import { ResponseHelper } from "../../http/ResponseHelper";
 import { HttpResponse } from "../../constants/MessageConstant";
 import { AuthenticatedRequest } from "../../http/auth.middleware";
-import { IUserController } from "../interface/IUserController";
+import { IUserController } from "../interfaces/IUserController";
 
 export class UserController implements IUserController {
   constructor(private readonly _userService: IUserService) {}

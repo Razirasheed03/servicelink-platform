@@ -12,6 +12,9 @@ export interface IUserModel extends Document {
   location?: string;
   experience?: number;
   isBlocked?: boolean;
+	isVerified?: boolean;
+	verificationStatus?: "pending" | "approved" | "rejected";
+	verificationReason?: string;
   resetPasswordToken?: string;
   resetPasswordExpires?: Date;
   createdAt?: Date;

@@ -10,9 +10,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserRepository = void 0;
-// src/repositories/implements/UserRepository.ts
+//repositories/implements/user.repository.ts
 const baseRepository_1 = require("../baseRepository");
 const user_model_1 = require("../../models/implements/user.model");
+const roles_1 = require("../../constants/roles");
 class UserRepository extends baseRepository_1.BaseRepository {
     constructor() {
         super(user_model_1.UserModel);
@@ -35,41 +36,63 @@ class UserRepository extends baseRepository_1.BaseRepository {
             return yield this.model.findById(id);
         });
     }
-    //   async getAllUsers(
-    //     page = 1,
-    //     limit = 10,
-    //     search = ""
-    //   ): Promise<{
-    //     users: Omit<IUserModel, "password">[];
-    //     total: number;
-    //     page: number;
-    //     totalPages: number;
-    //   }> {
-    //     const skip = (page - 1) * limit;
-    //     const searchQuery = search
-    //       ? {
-    //           $or: [
-    //             { username: { $regex: search, $options: "i" } },
-    //             { email: { $regex: search, $options: "i" } }
-    //           ]
-    //         }
-    //       : {};
-    //     const users = await UserModel
-    //       .find(searchQuery)
-    //       .select("-password")
-    //       .sort({ createdAt: -1 })
-    //       .skip(skip)
-    //       .limit(limit)
-    //       .lean();
-    //     const total = await UserModel.countDocuments(searchQuery);
-    //     const totalPages = Math.ceil(total / limit);
-    //     return {
-    //       users: users as Omit<IUserModel, "password">[],
-    //       total,
-    //       page,
-    //       totalPages
-    //     };
-    //   }
+    findPublicById(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const user = yield this.model.findById(id).select("-password");
+            return user ? user.toObject() : null;
+        });
+    }
+    updateByIdPublic(id, update) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const updated = yield this.model
+                .findByIdAndUpdate(id, { $set: update }, {
+                new: true,
+                runValidators: true,
+                context: "query",
+            })
+                .select("-password");
+            return updated ? updated.toObject() : null;
+        });
+    }
+    listProviders(options) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const page = Math.max(1, options.page || 1);
+            const limit = Math.max(1, Math.min(50, options.limit || 12));
+            const skip = (page - 1) * limit;
+            const filters = {
+                role: roles_1.UserRole.SERVICE_PROVIDER,
+                isBlocked: false,
+            };
+            if (options.serviceType) {
+                filters.serviceType = options.serviceType;
+            }
+            if (options.search) {
+                const q = options.search.trim();
+                filters.$or = [
+                    { username: { $regex: q, $options: "i" } },
+                    { email: { $regex: q, $options: "i" } },
+                    { serviceType: { $regex: q, $options: "i" } },
+                    { location: { $regex: q, $options: "i" } },
+                ];
+            }
+            const [items, total] = yield Promise.all([
+                this.model
+                    .find(filters)
+                    .select("-password")
+                    .sort({ createdAt: -1 })
+                    .skip(skip)
+                    .limit(limit)
+                    .lean(),
+                this.model.countDocuments(filters),
+            ]);
+            return {
+                providers: items,
+                total,
+                page,
+                totalPages: Math.ceil(total / limit),
+            };
+        });
+    }
     updateUserBlockStatus(userId, isBlocked) {
         return __awaiter(this, void 0, void 0, function* () {
             const user = yield user_model_1.UserModel.findByIdAndUpdate(userId, { isBlocked }, { new: true }).select("-password");
@@ -87,25 +110,6 @@ class UserRepository extends baseRepository_1.BaseRepository {
             }
         });
     }
-    //   async getUserStats(): Promise<{
-    //     totalUsers: number;
-    //     totalDoctors: number;
-    //     totalPatients: number;
-    //     blockedUsers: number;
-    //   }> {
-    //     const [totalUsers, totalDoctors, totalPatients, blockedUsers] = await Promise.all([
-    //       UserModel.countDocuments({}),
-    //       UserModel.countDocuments({ role: UserRole.SERVICE_PROVIDER }),
-    //       UserModel.countDocuments({ role: UserRole.USER }),
-    //       UserModel.countDocuments({ isBlocked: true })
-    //     ]);
-    //     return {
-    //       totalUsers,
-    //       totalDoctors,
-    //       totalPatients,
-    //       blockedUsers
-    //     };
-    //   }
     updateUsername(userId, username) {
         return __awaiter(this, void 0, void 0, function* () {
             const updated = yield this.model

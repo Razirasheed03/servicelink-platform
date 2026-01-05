@@ -21,6 +21,7 @@ export class UserService implements IUserService {
 
     // Enforce: location and experience only for service providers
     const update: Partial<IUserModel> = {};
+    if (payload.username !== undefined) update.username = payload.username;
     if (payload.phone !== undefined) update.phone = payload.phone;
     if (payload.serviceType !== undefined) update.serviceType = payload.serviceType;
 
@@ -49,11 +50,12 @@ export class UserService implements IUserService {
   async getProviderById(id: string) {
     const user = await this._userRepo.findPublicById(id);
     if (!user) return null;
-    // @ts-expect-error role exists in user
     const isProvider = (user as any).role === UserRole.SERVICE_PROVIDER;
-    // @ts-expect-error isBlocked exists in user
     const blocked = !!(user as any).isBlocked;
+    const verified = !!(user as any).isVerified;
+    const status = (user as any).verificationStatus as string | undefined;
     if (!isProvider || blocked) return null;
+		if (!verified || status !== "approved") return null;
     return user;
   }
 }

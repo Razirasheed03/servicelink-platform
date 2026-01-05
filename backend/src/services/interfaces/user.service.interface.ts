@@ -1,6 +1,7 @@
 import { IUserModel } from "../../models/interfaces/user.model.interface";
 
 export type UpdateProfileInput = Partial<Pick<IUserModel,
+  |"username"
   | "phone"
   | "serviceType"
   | "location"

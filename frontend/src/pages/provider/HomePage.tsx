@@ -1,7 +1,8 @@
 import ProviderSidebar from "../../components/provider/Sidebar";
 import ProviderNavbar from "../../components/provider/Navbar";
+import { useEffect, useState } from "react";
+import userService, { type ProviderDashboardResponse } from "@/services/userService";
 import {
-  Calendar,
   ClipboardList,
   DollarSign,
   UserCog,
@@ -10,6 +11,34 @@ import {
 } from "lucide-react";
 
 export default function ProviderHome() {
+	const [dashboard, setDashboard] = useState<ProviderDashboardResponse>({
+		avgRating: 0,
+		totalReviews: 0,
+		recentReviews: [],
+		completedJobs: 42,
+	});
+	const [loading, setLoading] = useState(false);
+
+	useEffect(() => {
+		let active = true;
+		const load = async () => {
+			setLoading(true);
+			try {
+				const res = await userService.getProviderDashboard();
+				if (!active) return;
+				if (res?.success && res.data) {
+					setDashboard(res.data);
+				}
+			} finally {
+				if (active) setLoading(false);
+			}
+		};
+		load();
+		return () => {
+			active = false;
+		};
+	}, []);
+
   return (
     <div className="flex min-h-screen">
 
@@ -38,10 +67,10 @@ export default function ProviderHome() {
 
             {/* Stats */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              <StatCard title="Total Jobs" count="42" icon={Briefcase} color="text-blue-600" />
-              <StatCard title="Upcoming" count="5" icon={Calendar} color="text-green-600" />
-              <StatCard title="Earnings" count="₹12,450" icon={DollarSign} color="text-emerald-600" />
-              <StatCard title="Rating" count="4.8" icon={Star} color="text-yellow-500" />
+							<StatCard title="Completed Jobs" count={String(dashboard.completedJobs)} icon={Briefcase} color="text-blue-600" />
+							<StatCard title="Total Reviews" count={String(dashboard.totalReviews)} icon={ClipboardList} color="text-indigo-600" />
+							<StatCard title="Avg Rating" count={String(dashboard.avgRating.toFixed(1))} icon={Star} color="text-yellow-500" />
+							<StatCard title="Earnings" count={"₹12,450"} icon={DollarSign} color="text-emerald-600" />
             </div>
 
             {/* Recent Jobs + Actions */}
@@ -49,27 +78,25 @@ export default function ProviderHome() {
               {/* Recent Jobs */}
               <div className="p-6 bg-white/80 rounded-3xl shadow-md border border-white/40">
                 <h2 className="text-xl font-semibold text-gray-800 mb-4">
-                  Recent Jobs
+									Recent Reviews
                 </h2>
 
-                <div className="space-y-4">
-                  {[
-                    { title: "AC Repair", customer: "Arun", time: "Today, 2 PM" },
-                    { title: "Pipe Leak Fix", customer: "Rahul", time: "Yesterday" },
-                    { title: "Deep Cleaning", customer: "Neha", time: "2 days ago" },
-                  ].map((job, i) => (
-                    <div
-                      key={i}
-                      className="p-4 bg-white rounded-2xl shadow border border-gray-100"
-                    >
-                      <h3 className="font-semibold text-gray-800">{job.title}</h3>
-                      <p className="text-gray-600 text-sm">
-                        Customer: {job.customer}
-                      </p>
-                      <p className="text-gray-500 text-sm">{job.time}</p>
-                    </div>
-                  ))}
-                </div>
+									{loading ? (
+										<div className="text-gray-600">Loading...</div>
+									) : dashboard.recentReviews.length === 0 ? (
+										<div className="text-gray-600">No reviews yet.</div>
+									) : (
+										<div className="space-y-4">
+											{dashboard.recentReviews.map((r) => (
+												<div key={r.id} className="p-4 bg-white rounded-2xl shadow border border-gray-100">
+													<h3 className="font-semibold text-gray-800">{r.userName}</h3>
+													<p className="text-gray-600 text-sm mt-1">Rating: {r.rating}</p>
+													{r.comment ? <p className="text-gray-600 text-sm mt-2">{r.comment}</p> : null}
+													<p className="text-gray-500 text-xs mt-2">{r.date}</p>
+												</div>
+											))}
+										</div>
+									)}
               </div>
 
               {/* Quick Actions */}

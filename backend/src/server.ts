@@ -6,6 +6,7 @@ import { env } from "./config/env";
 
 import authRoutes from "./routes/auth.route";
 import userRoutes from "./routes/user.route";
+import reviewRoutes from "./routes/review.route";
 
 const app = express();
 
@@ -35,11 +36,12 @@ connectDB()
 
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
+app.use("/api/reviews", reviewRoutes);
 
 // Global Error Handler
 app.use((err: any, _req: any, res: any, _next: any) => {
   console.error("Error handler:", err?.message);
-  res.status(err.status || 400).json({
+  res.status(err.status || err.statusCode || 400).json({
     success: false,
     message: err.message || "Something went wrong.",
   });

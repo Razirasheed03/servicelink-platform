@@ -6,7 +6,6 @@ import {
   Search, 
   User, 
   MapPin, 
-  Star,
   Zap,
   Droplet,
   Hammer,
@@ -21,6 +20,7 @@ import {
   Eye
 } from 'lucide-react';
 import userService from "@/services/userService";
+import UserNavbar from '@/components/user/UserNavbar';
 
 interface BackendProvider {
   _id: string;
@@ -47,7 +47,7 @@ export default function HomePage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [providers, setProviders] = useState<BackendProvider[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [, setLoading] = useState(false);
 
   // Check authentication on mount
   useEffect(() => {
@@ -107,83 +107,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <div className="flex items-center gap-2">
-              <div className="bg-linear-to-br from-blue-600 to-indigo-600 p-2 rounded-xl">
-                <Wrench className="w-6 h-6 text-white" />
-              </div>
-              <h1 className="text-2xl font-bold bg-linear-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                ServiceLink
-              </h1>
-            </div>
-
-            {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-6">
-              <a href="#" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">
-                Home
-              </a>
-              <a href="#" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">
-                Services
-              </a>
-              <a href="#" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">
-                About
-              </a>
-              {/* <a href="#" className="text-gray-700 hover:text-blue-600 font-medium transition-colors">
-                Contact
-              </a> */}
-            </nav>
-
-            {/* Right Side Actions */}
-            <div className="flex items-center gap-3">
-              <button className="hidden md:flex items-center gap-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors">
-                <User className="w-5 h-5 text-gray-700" />
-                <span className="font-medium text-gray-700">{user?.username || 'Profile'}</span>
-              </button>
-              <button
-                onClick={handleLogout}
-                className="hidden md:flex items-center gap-2 px-4 py-2 bg-red-600 text-white hover:bg-red-700 rounded-lg transition-colors"
-              >
-                <LogOut className="w-5 h-5" />
-                Logout
-              </button>
-              <button 
-                className="md:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              >
-                {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-              </button>
-            </div>
-          </div>
-
-          {/* Mobile Menu */}
-          {isMobileMenuOpen && (
-            <div className="md:hidden py-4 border-t">
-              <nav className="flex flex-col gap-3">
-                <a href="#" className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg font-medium">
-                  Home
-                </a>
-                <a href="#" className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg font-medium">
-                  Services
-                </a>
-                <a href="#" className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg font-medium">
-                  About
-                </a>
-                <a href="#" className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg font-medium">
-                  Contact
-                </a>
-                <a href="#" className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg font-medium">
-                  Profile
-                </a>
-              </nav>
-            </div>
-          )}
-        </div>
-      </header>
-
+    <UserNavbar/>
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}

@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.User = void 0;
-//user.schema.ts
 const mongoose_1 = require("mongoose");
 const roles_1 = require("../constants/roles");
 const UserSchema = new mongoose_1.Schema({
@@ -13,9 +12,11 @@ const UserSchema = new mongoose_1.Schema({
         type: String,
         enum: Object.values(roles_1.UserRole),
         default: roles_1.UserRole.USER,
-        required: true
+        required: true,
     },
     serviceType: { type: String },
+    location: { type: String },
+    experience: { type: Number, min: 0 },
     isBlocked: { type: Boolean, default: false },
     resetPasswordToken: { type: String },
     resetPasswordExpires: { type: Date },

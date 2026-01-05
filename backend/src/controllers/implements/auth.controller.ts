@@ -5,7 +5,7 @@ import { OAuth2Client } from "google-auth-library";
 import { CookieHelper } from "../../utils/cookieHelper";
 import { ResponseHelper } from "../../http/ResponseHelper";
 import { HttpResponse } from "../../constants/MessageConstant";
-import { IAuthController } from "../interface/IAuthController";
+import { IAuthController } from "../interfaces/IAuthController";
 
 export class AuthController implements IAuthController {
   constructor(private readonly _authService: IAuthService) {}

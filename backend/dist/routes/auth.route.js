@@ -1,6 +1,5 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-// src/routes/authRoutes.ts
 const express_1 = require("express");
 const asyncHandler_1 = require("../utils/asyncHandler");
 const auth_di_1 = require("../dependencies/auth.di");

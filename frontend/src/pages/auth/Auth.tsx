@@ -3,7 +3,6 @@ import { Wrench, Mail, Lock, User, Phone, CheckCircle2 } from 'lucide-react';
 import userService from "@/services/userService";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { AUTH_ROUTES } from "@/constants/apiRoutes";
 import { useAuth } from '@/context/authContext';
 
 type Role = "user" | "service_provider";
@@ -121,9 +120,6 @@ export default function ServiceLinkAuthPage() {
       setLoading(false);
     }
   };
-
-  const handleGoogleLogin = () =>
-    (window.location.href = AUTH_ROUTES.GOOGLE);
 
   return (
     <div className="min-h-screen bg-linear-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">

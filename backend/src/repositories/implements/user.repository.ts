@@ -1,3 +1,4 @@
+//repositories/implements/user.repository.ts
 import { BaseRepository } from "../baseRepository";
 import { IUserRepository } from "../interface/user.repository.interface";
 
@@ -59,6 +60,8 @@ export class UserRepository extends BaseRepository<IUserModel> implements IUserR
     const filters: any = {
       role: UserRole.SERVICE_PROVIDER,
       isBlocked: false,
+			isVerified: true,
+			verificationStatus: "approved",
     };
 
     if (options.serviceType) {
@@ -87,7 +90,7 @@ export class UserRepository extends BaseRepository<IUserModel> implements IUserR
     ]);
 
     return {
-      providers: items as Omit<IUserModel, "password">[],
+      providers: items as unknown as Omit<IUserModel, "password">[],
       total,
       page,
       totalPages: Math.ceil(total / limit),

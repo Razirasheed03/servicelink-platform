@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import userService from '@/services/userService';
+import { toast } from 'sonner';
 import { 
   User, 
   Mail, 
@@ -28,19 +29,27 @@ interface ServiceProviderProfile {
 }
 
 interface Review {
-  id: number;
+  id: string;
   userName: string;
   rating: number;
-  comment: string;
+  comment?: string;
   date: string;
+	isOwner: boolean;
+	reply?: {
+		comment: string;
+		date: string;
+	};
 }
 
 const ServiceProviderDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [showRatingModal, setShowRatingModal] = useState(false);
+  const [reviewModalMode, setReviewModalMode] = useState<'create' | 'edit'>('create');
+  const [editingReviewId, setEditingReviewId] = useState<string | null>(null);
   const [userRating, setUserRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [feedback, setFeedback] = useState('');
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [provider, setProvider] = useState<ServiceProviderProfile>({
     username: '',
     email: '',
@@ -52,7 +61,21 @@ const ServiceProviderDetailPage: React.FC = () => {
     totalReviews: 24,
     completedJobs: 42,
   });
-  const [loading, setLoading] = useState<boolean>(true);
+  const [, setLoading] = useState<boolean>(true);
+
+  const fetchReviews = async (providerId: string) => {
+    const res = await userService.getReviewsByProvider(providerId);
+    if (!res?.success || !res.data) {
+      setReviews([]);
+      return;
+    }
+    setReviews(res.data.reviews || []);
+    setProvider((prev) => ({
+      ...prev,
+      rating: res.data.avgRating,
+      totalReviews: res.data.total,
+    }));
+  };
 
   useEffect(() => {
     let active = true;
@@ -100,40 +123,49 @@ const ServiceProviderDetailPage: React.FC = () => {
     };
   }, [id]);
 
-  const reviews: Review[] = [
-    {
-      id: 1,
-      userName: "Arun Kumar",
-      rating: 5,
-      comment: "Excellent service! Very professional and completed the work on time.",
-      date: "2 days ago"
-    },
-    {
-      id: 2,
-      userName: "Priya Menon",
-      rating: 4,
-      comment: "Good work quality. Would recommend to others.",
-      date: "1 week ago"
-    },
-    {
-      id: 3,
-      userName: "Rahul Sharma",
-      rating: 5,
-      comment: "Fixed my plumbing issue quickly. Very satisfied with the service.",
-      date: "2 weeks ago"
-    }
-  ];
+  useEffect(() => {
+    if (!id) return;
+    fetchReviews(id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
-  const handleSubmitReview = () => {
-    if (userRating === 0) {
-      alert('Please select a rating');
-      return;
+  const handleSubmitReview = async () => {
+    if (!id) return;
+    if (!userRating) return;
+
+    try {
+      if (reviewModalMode === 'edit' && editingReviewId) {
+        const res = await userService.editReview(editingReviewId, {
+          rating: userRating,
+          comment: feedback,
+        });
+        if (!res?.success) {
+          toast.error(res?.message || 'Failed to edit review');
+          return;
+        }
+        toast.success('Review updated');
+      } else {
+        const res = await userService.addReview({
+          providerId: id,
+          rating: userRating,
+          comment: feedback,
+        });
+        if (!res?.success) {
+          toast.error(res?.message || 'Failed to submit review');
+          return;
+        }
+        toast.success('Review submitted');
+      }
+
+      setShowRatingModal(false);
+      setUserRating(0);
+      setFeedback('');
+      setEditingReviewId(null);
+      setReviewModalMode('create');
+      await fetchReviews(id);
+    } catch (e: any) {
+      toast.error(e?.message || 'Something went wrong');
     }
-    // Handle review submission logic here
-    console.log('Rating:', userRating, 'Feedback:', feedback);
-    setShowRatingModal(false);
-    setUserRating(0);
-    setFeedback('');
   };
 
   const renderStars = (rating: number, interactive: boolean = false) => {
@@ -207,11 +239,25 @@ const ServiceProviderDetailPage: React.FC = () => {
 
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-3 mt-4 md:mt-0 mb-4">
-                <button 
-                  onClick={() => setShowRatingModal(true)}
+                <button
+                  onClick={() => {
+                    const mine = reviews.find((r) => r.isOwner);
+                    if (mine) {
+                      setReviewModalMode('edit');
+                      setEditingReviewId(mine.id);
+                      setUserRating(mine.rating);
+                      setFeedback(mine.comment || '');
+                    } else {
+                      setReviewModalMode('create');
+                      setEditingReviewId(null);
+                      setUserRating(0);
+                      setFeedback('');
+                    }
+                    setShowRatingModal(true);
+                  }}
                   className="px-6 py-3 bg-white text-indigo-600 border-2 border-indigo-600 rounded-2xl hover:bg-indigo-50 transition font-medium"
                 >
-                  Write Review
+                  {reviews.some((r) => r.isOwner) ? 'Edit Review' : 'Write Review'}
                 </button>
               </div>
             </div>
@@ -342,8 +388,31 @@ const ServiceProviderDetailPage: React.FC = () => {
                           <span className="text-xs text-gray-500">{review.date}</span>
                         </div>
                       </div>
+                      {review.isOwner ? (
+                        <button
+                          onClick={() => {
+                            setReviewModalMode('edit');
+                            setEditingReviewId(review.id);
+                            setUserRating(review.rating);
+                            setFeedback(review.comment || '');
+                            setShowRatingModal(true);
+                          }}
+                          className="text-xs px-3 py-1 rounded-lg border border-indigo-300 text-indigo-600 hover:bg-indigo-50"
+                        >
+                          Edit
+                        </button>
+                      ) : null}
                     </div>
-                    <p className="text-gray-700 text-sm mt-2">{review.comment}</p>
+                    {review.comment ? (
+                      <p className="text-gray-700 text-sm mt-2">{review.comment}</p>
+                    ) : null}
+                    {review.reply ? (
+                      <div className="mt-3 p-3 bg-white rounded-xl border border-gray-200">
+                        <div className="text-xs font-semibold text-gray-700">Provider reply</div>
+                        <div className="text-xs text-gray-500 mt-1">{review.reply.date}</div>
+                        <div className="text-sm text-gray-700 mt-2">{review.reply.comment}</div>
+                      </div>
+                    ) : null}
                   </div>
                 ))}
               </div>

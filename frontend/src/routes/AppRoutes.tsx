@@ -7,6 +7,9 @@ import PublicRoute from "./PublicRoute";
 import ProtectedRoute from "./ProtectedRoute";
 import ServiceProviderProfilePage from "@/pages/provider/Profile";
 import ServiceProviderDetailPage from "@/pages/user/DetailPage";
+import ProviderReviewsPage from "@/pages/provider/Reviews";
+import ProvidersPage from "@/pages/user/Providers";
+import AboutPage from "@/pages/user/AboutPage";
 
 export const router = createBrowserRouter([
   {
@@ -34,6 +37,15 @@ export const router = createBrowserRouter([
     element: <ProtectedRoute allowedRoles={["user"]}> <ServiceProviderDetailPage /> </ProtectedRoute>
   },
 
+	{
+		path: "/user/providers",
+		element: <ProtectedRoute allowedRoles={["user"]}> <ProvidersPage /> </ProtectedRoute>
+	},
+	{
+		path: "/user/about",
+		element: <ProtectedRoute allowedRoles={["user"]}> <AboutPage /> </ProtectedRoute>
+	},
+
   {
     path: "/provider/home",
     element: <ProtectedRoute allowedRoles={["service_provider"]}> <ProviderHome /> </ProtectedRoute>
@@ -43,4 +55,9 @@ export const router = createBrowserRouter([
     path: "/provider/profile",
     element: <ProtectedRoute allowedRoles={["service_provider"]}> <ServiceProviderProfilePage /> </ProtectedRoute>
   },
+
+	{
+		path: "/provider/reviews",
+		element: <ProtectedRoute allowedRoles={["service_provider"]}> <ProviderReviewsPage /> </ProtectedRoute>
+	},
 ]);
