@@ -6,4 +6,5 @@ export interface IUserController {
   updateProfile(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void>;
   listProviders(req: Request, res: Response, next: NextFunction): Promise<void>;
   getProviderById(req: Request, res: Response, next: NextFunction): Promise<void>;
+  reapplyVerification(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void>;
 }

@@ -10,6 +10,10 @@ import ServiceProviderDetailPage from "@/pages/user/DetailPage";
 import ProviderReviewsPage from "@/pages/provider/Reviews";
 import ProvidersPage from "@/pages/user/Providers";
 import AboutPage from "@/pages/user/AboutPage";
+import AdminDashboardPage from "@/pages/admin/Dashboard";
+import AdminProvidersPage from "@/pages/admin/Providers";
+import AdminUsersPage from "@/pages/admin/Users";
+import AdminProviderDetailPage from "@/pages/admin/ProviderDetail";
 
 export const router = createBrowserRouter([
   {
@@ -59,5 +63,21 @@ export const router = createBrowserRouter([
 	{
 		path: "/provider/reviews",
 		element: <ProtectedRoute allowedRoles={["service_provider"]}> <ProviderReviewsPage /> </ProtectedRoute>
+	},
+	{
+		path: "/admin/dashboard",
+		element: <ProtectedRoute allowedRoles={["admin"]}> <AdminDashboardPage /> </ProtectedRoute>
+	},
+	{
+		path: "/admin/providers",
+		element: <ProtectedRoute allowedRoles={["admin"]}> <AdminProvidersPage /> </ProtectedRoute>
+	},
+	{
+		path: "/admin/providers/:providerId",
+		element: <ProtectedRoute allowedRoles={["admin"]}> <AdminProviderDetailPage /> </ProtectedRoute>
+	},
+	{
+		path: "/admin/users",
+		element: <ProtectedRoute allowedRoles={["admin"]}> <AdminUsersPage /> </ProtectedRoute>
 	},
 ]);

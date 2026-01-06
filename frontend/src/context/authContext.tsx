@@ -10,7 +10,11 @@ interface AuthUser {
   serviceType?: string;
   experience?: number;
   location?: string;
+	consultationFee?: number;
   isBlocked?: boolean;
+	isVerified?: boolean;
+	verificationStatus?: "pending" | "approved" | "rejected";
+	verificationReason?: string;
   createdAt?: string;
   updatedAt?: string;
 }

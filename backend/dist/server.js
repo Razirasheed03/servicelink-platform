@@ -11,6 +11,7 @@ const env_1 = require("./config/env");
 const auth_route_1 = __importDefault(require("./routes/auth.route"));
 const user_route_1 = __importDefault(require("./routes/user.route"));
 const review_route_1 = __importDefault(require("./routes/review.route"));
+const admin_route_1 = __importDefault(require("./routes/admin.route"));
 const app = (0, express_1.default)();
 const corsOptions = {
     origin: [
@@ -35,6 +36,7 @@ app.use((0, cookie_parser_1.default)());
 app.use("/api/auth", auth_route_1.default);
 app.use("/api/user", user_route_1.default);
 app.use("/api/reviews", review_route_1.default);
+app.use("/api/admin", admin_route_1.default);
 // Global Error Handler
 app.use((err, _req, res, _next) => {
     console.error("Error handler:", err === null || err === void 0 ? void 0 : err.message);
