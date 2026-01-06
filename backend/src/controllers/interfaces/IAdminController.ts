@@ -3,6 +3,7 @@ import { AuthenticatedRequest } from "../../http/auth.middleware";
 
 export interface IAdminController {
 	getDashboard(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void>;
+	getProviderById(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void>;
 	listProviders(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void>;
 	listUsers(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void>;
 	approveProvider(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void>;

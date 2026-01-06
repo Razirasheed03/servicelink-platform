@@ -2,7 +2,7 @@ import { IUserService, UpdateProfileInput } from "../interfaces/user.service.int
 import { IUserRepository } from "../../repositories/interface/user.repository.interface";
 import { IUserModel } from "../../models/interfaces/user.model.interface";
 import { UserRole } from "../../constants/roles";
-import { AppError } from "../../http/errors";
+import { AppError, ValidationAppError } from "../../http/errors";
 
 export class UserService implements IUserService {
   constructor(private readonly _userRepo: IUserRepository) {}
@@ -25,6 +25,16 @@ export class UserService implements IUserService {
     if (payload.username !== undefined) update.username = payload.username;
     if (payload.phone !== undefined) update.phone = payload.phone;
     if (payload.serviceType !== undefined) update.serviceType = payload.serviceType;
+
+		if (payload.consultationFee !== undefined) {
+			if (!isProvider) {
+				// ignore
+			} else {
+				const fee = Number(payload.consultationFee);
+				if (Number.isNaN(fee) || fee < 0) throw new ValidationAppError("Consultation fee must be a non-negative number");
+				update.consultationFee = fee;
+			}
+		}
 
     if (payload.location !== undefined || payload.experience !== undefined) {
       if (!isProvider) {

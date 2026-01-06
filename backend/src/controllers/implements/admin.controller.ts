@@ -19,6 +19,18 @@ export class AdminController implements IAdminController {
 		}
 	};
 
+	getProviderById = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+		try {
+			const adminUserId = req.userId!;
+			const { providerId } = req.params as { providerId: string };
+			const provider = await this.adminService.getProviderById(adminUserId, providerId);
+			ResponseHelper.ok(res, { provider }, HttpResponse.RESOURCE_FOUND);
+			return;
+		} catch (err) {
+			next(err);
+		}
+	};
+
 	listProviders = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
 		try {
 			const adminUserId = req.userId!;

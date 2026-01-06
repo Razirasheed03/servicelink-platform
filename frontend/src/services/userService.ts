@@ -1,5 +1,11 @@
 import httpClient from "./httpClient";
 
+export type ApiResult<T> = {
+	success: boolean;
+	data: T | null;
+	message?: string;
+};
+
 export type SignupPayload = {
   name: string;
   email: string;
@@ -15,6 +21,7 @@ export type UpdateProfilePayload = {
   serviceType?: string;
   location?: string;
   experience?: number;
+	consultationFee?: number;
 };
 
 export type ReviewReply = {
@@ -57,13 +64,25 @@ export type AdminDashboardStats = {
 	totalProviders: number;
 	verifiedProviders: number;
 	pendingVerifications: number;
+	activeProviders: number;
+	newProvidersThisMonth: number;
+	providerStatusCounts: {
+		approved: number;
+		pending: number;
+		rejected: number;
+		blocked: number;
+	};
 };
 
 export type AdminProviderView = {
 	_id: string;
 	username: string;
 	email: string;
+	phone?: string;
 	serviceType?: string;
+	location?: string;
+	experience?: number;
+	consultationFee?: number;
 	isBlocked?: boolean;
 	isVerified?: boolean;
 	verificationStatus?: VerificationStatus;
@@ -101,6 +120,7 @@ export type ProfileResponse = {
 		serviceType?: string;
 		experience?: number;
 		location?: string;
+		consultationFee?: number;
 		isBlocked?: boolean;
 		isVerified?: boolean;
 		verificationStatus?: VerificationStatus;
@@ -132,6 +152,19 @@ const userService = {
 				message: error?.response?.data?.message || "Failed to edit review",
 				data: null,
 			};
+		}
+	},
+
+	getAdminProviderById: async (providerId: string) => {
+		try {
+			const res = await httpClient.get(`/admin/providers/${providerId}`);
+			return res.data as ApiResult<{ provider: AdminProviderView }>;
+		} catch (error: any) {
+			return {
+				success: false,
+				message: error?.response?.data?.message || "Failed to fetch provider",
+				data: null,
+			} as ApiResult<{ provider: AdminProviderView }>;
 		}
 	},
 

@@ -5,10 +5,19 @@ export interface IAdminDashboardStats {
 	totalProviders: number;
 	verifiedProviders: number;
 	pendingVerifications: number;
+	activeProviders: number;
+	newProvidersThisMonth: number;
+	providerStatusCounts: {
+		approved: number;
+		pending: number;
+		rejected: number;
+		blocked: number;
+	};
 }
 
 export interface IAdminRepository {
 	getDashboardStats(): Promise<IAdminDashboardStats>;
+	getProviderById(providerId: string): Promise<Omit<IUserModel, "password"> | null>;
 	listProviders(options: {
 		page?: number;
 		limit?: number;

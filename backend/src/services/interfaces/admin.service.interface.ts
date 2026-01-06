@@ -3,6 +3,7 @@ import { IAdminDashboardStats } from "../../repositories/interface/admin.reposit
 
 export interface IAdminService {
 	getDashboardStats(adminUserId: string): Promise<IAdminDashboardStats>;
+	getProviderById(adminUserId: string, providerId: string): Promise<Omit<IUserModel, "password">>;
 	listProviders(
 		adminUserId: string,
 		options: { page?: number; limit?: number }

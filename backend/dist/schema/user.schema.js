@@ -17,6 +17,7 @@ const UserSchema = new mongoose_1.Schema({
     serviceType: { type: String },
     location: { type: String },
     experience: { type: Number, min: 0 },
+    consultationFee: { type: Number, min: 0 },
     isBlocked: { type: Boolean, default: false },
     isVerified: { type: Boolean, default: false },
     verificationStatus: {

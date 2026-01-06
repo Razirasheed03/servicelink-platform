@@ -7,6 +7,7 @@ const admin_di_1 = require("../dependencies/admin.di");
 const router = (0, express_1.Router)();
 router.get("/dashboard", auth_middleware_1.requireAuth, (0, asyncHandler_1.asyncHandler)(admin_di_1.adminController.getDashboard));
 router.get("/providers", auth_middleware_1.requireAuth, (0, asyncHandler_1.asyncHandler)(admin_di_1.adminController.listProviders));
+router.get("/providers/:providerId", auth_middleware_1.requireAuth, (0, asyncHandler_1.asyncHandler)(admin_di_1.adminController.getProviderById));
 router.get("/users", auth_middleware_1.requireAuth, (0, asyncHandler_1.asyncHandler)(admin_di_1.adminController.listUsers));
 router.patch("/providers/:providerId/approve", auth_middleware_1.requireAuth, (0, asyncHandler_1.asyncHandler)(admin_di_1.adminController.approveProvider));
 router.patch("/providers/:providerId/reject", auth_middleware_1.requireAuth, (0, asyncHandler_1.asyncHandler)(admin_di_1.adminController.rejectProvider));

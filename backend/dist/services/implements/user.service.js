@@ -35,6 +35,17 @@ class UserService {
                 update.phone = payload.phone;
             if (payload.serviceType !== undefined)
                 update.serviceType = payload.serviceType;
+            if (payload.consultationFee !== undefined) {
+                if (!isProvider) {
+                    // ignore
+                }
+                else {
+                    const fee = Number(payload.consultationFee);
+                    if (Number.isNaN(fee) || fee < 0)
+                        throw new errors_1.ValidationAppError("Consultation fee must be a non-negative number");
+                    update.consultationFee = fee;
+                }
+            }
             if (payload.location !== undefined || payload.experience !== undefined) {
                 if (!isProvider) {
                     // Ignore disallowed fields if not a provider

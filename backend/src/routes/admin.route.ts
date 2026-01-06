@@ -8,6 +8,7 @@ const router = Router();
 router.get("/dashboard", requireAuth, asyncHandler(adminController.getDashboard));
 
 router.get("/providers", requireAuth, asyncHandler(adminController.listProviders));
+router.get("/providers/:providerId", requireAuth, asyncHandler(adminController.getProviderById));
 router.get("/users", requireAuth, asyncHandler(adminController.listUsers));
 
 router.patch("/providers/:providerId/approve", requireAuth, asyncHandler(adminController.approveProvider));

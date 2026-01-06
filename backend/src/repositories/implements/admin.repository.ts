@@ -8,11 +8,20 @@ import {
 
 export class AdminRepository implements IAdminRepository {
 	async getDashboardStats(): Promise<IAdminDashboardStats> {
+		const now = new Date();
+		const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
 		const [
 			totalUsers,
 			totalProviders,
 			verifiedProviders,
 			pendingVerifications,
+			activeProviders,
+			newProvidersThisMonth,
+			approvedCount,
+			pendingCount,
+			rejectedCount,
+			blockedCount,
 		] = await Promise.all([
 			UserModel.countDocuments({ role: UserRole.USER }),
 			UserModel.countDocuments({ role: UserRole.SERVICE_PROVIDER }),
@@ -27,6 +36,32 @@ export class AdminRepository implements IAdminRepository {
 				isBlocked: false,
 				verificationStatus: "pending",
 			}),
+			UserModel.countDocuments({
+				role: UserRole.SERVICE_PROVIDER,
+				isBlocked: false,
+				verificationStatus: "approved",
+				isVerified: true,
+			}),
+			UserModel.countDocuments({
+				role: UserRole.SERVICE_PROVIDER,
+				createdAt: { $gte: startOfMonth },
+			}),
+			UserModel.countDocuments({
+				role: UserRole.SERVICE_PROVIDER,
+				verificationStatus: "approved",
+			}),
+			UserModel.countDocuments({
+				role: UserRole.SERVICE_PROVIDER,
+				verificationStatus: "pending",
+			}),
+			UserModel.countDocuments({
+				role: UserRole.SERVICE_PROVIDER,
+				verificationStatus: "rejected",
+			}),
+			UserModel.countDocuments({
+				role: UserRole.SERVICE_PROVIDER,
+				isBlocked: true,
+			}),
 		]);
 
 		return {
@@ -34,7 +69,22 @@ export class AdminRepository implements IAdminRepository {
 			totalProviders,
 			verifiedProviders,
 			pendingVerifications,
+			activeProviders,
+			newProvidersThisMonth,
+			providerStatusCounts: {
+				approved: approvedCount,
+				pending: pendingCount,
+				rejected: rejectedCount,
+				blocked: blockedCount,
+			},
 		};
+	}
+
+	async getProviderById(providerId: string): Promise<Omit<IUserModel, "password"> | null> {
+		const provider = await UserModel.findOne({ _id: providerId, role: UserRole.SERVICE_PROVIDER })
+			.select("-password")
+			.lean();
+		return provider ? (provider as unknown as Omit<IUserModel, "password">) : null;
 	}
 
 	async listProviders(options: {

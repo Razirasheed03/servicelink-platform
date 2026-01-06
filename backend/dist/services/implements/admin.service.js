@@ -32,6 +32,15 @@ class AdminService {
             return this.adminRepo.getDashboardStats();
         });
     }
+    getProviderById(adminUserId, providerId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            yield this.assertAdmin(adminUserId);
+            const provider = yield this.adminRepo.getProviderById(providerId);
+            if (!provider)
+                throw new errors_1.NotFoundError("Provider not found");
+            return provider;
+        });
+    }
     listProviders(adminUserId, options) {
         return __awaiter(this, void 0, void 0, function* () {
             yield this.assertAdmin(adminUserId);

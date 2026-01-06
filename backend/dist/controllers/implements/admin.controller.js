@@ -26,6 +26,18 @@ class AdminController {
                 next(err);
             }
         });
+        this.getProviderById = (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                const adminUserId = req.userId;
+                const { providerId } = req.params;
+                const provider = yield this.adminService.getProviderById(adminUserId, providerId);
+                ResponseHelper_1.ResponseHelper.ok(res, { provider }, MessageConstant_1.HttpResponse.RESOURCE_FOUND);
+                return;
+            }
+            catch (err) {
+                next(err);
+            }
+        });
         this.listProviders = (req, res, next) => __awaiter(this, void 0, void 0, function* () {
             try {
                 const adminUserId = req.userId;

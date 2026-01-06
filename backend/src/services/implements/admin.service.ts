@@ -23,6 +23,13 @@ export class AdminService implements IAdminService {
 		return this.adminRepo.getDashboardStats();
 	}
 
+	async getProviderById(adminUserId: string, providerId: string) {
+		await this.assertAdmin(adminUserId);
+		const provider = await this.adminRepo.getProviderById(providerId);
+		if (!provider) throw new NotFoundError("Provider not found");
+		return provider;
+	}
+
 	async listProviders(adminUserId: string, options: { page?: number; limit?: number }) {
 		await this.assertAdmin(adminUserId);
 		return this.adminRepo.listProviders(options);

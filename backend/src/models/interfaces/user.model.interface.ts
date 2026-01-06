@@ -11,6 +11,7 @@ export interface IUserModel extends Document {
   serviceType?: string;
   location?: string;
   experience?: number;
+	consultationFee?: number;
   isBlocked?: boolean;
 	isVerified?: boolean;
 	verificationStatus?: "pending" | "approved" | "rejected";

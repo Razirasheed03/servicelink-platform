@@ -12,6 +12,7 @@ interface ServiceProviderProfile {
   phone: string;
   serviceType: string;
   experience: number | string;
+  consultationFee?: number;
   profileImg?: string;
   location?: string;
 }
@@ -45,6 +46,7 @@ const [formData, setFormData] = useState({
   location: user?.location || "",
   serviceType: user?.serviceType || "",
   experience: user?.experience ? String(user.experience) : "",
+	consultationFee: user?.consultationFee != null ? String(user.consultationFee) : "",
 });
 
 
@@ -54,6 +56,7 @@ const [formData, setFormData] = useState({
     phone: user?.phone || "",
     serviceType: user?.serviceType || "",
     experience: user?.experience ?? 'Not Available',
+    consultationFee: user?.consultationFee,
     location: user?.location,
   };
 
@@ -71,6 +74,7 @@ const [formData, setFormData] = useState({
       location: user?.location || "",
       serviceType: user?.serviceType || "",
       experience: user?.experience ? String(user.experience) : "",
+			consultationFee: user?.consultationFee != null ? String(user.consultationFee) : "",
     });
     setIsEditing(true);
   };
@@ -81,6 +85,13 @@ const [formData, setFormData] = useState({
 
   const handleSave = async () => {
     if (!user) return;
+		if (formData.consultationFee) {
+			const fee = Number(formData.consultationFee);
+			if (Number.isNaN(fee) || fee < 0) {
+				toast.error("Consultation fee must be a non-negative number");
+				return;
+			}
+		}
 
     setSaving(true);
     try {
@@ -92,6 +103,7 @@ const [formData, setFormData] = useState({
         experience: formData.experience
           ? Number(formData.experience)
           : undefined,
+			consultationFee: formData.consultationFee ? Number(formData.consultationFee) : undefined,
       };
 
       const response = await userService.updateProfile(payload);
@@ -384,6 +396,30 @@ const [formData, setFormData] = useState({
                           <p className="text-gray-800 font-medium">
                             {profile.experience}{' '}
                             {profile.experience === 1 ? 'Year' : profile.experience ? '' : 'Years'}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Consultation Fee */}
+                    <div className="flex items-start gap-3 p-4 bg-white rounded-2xl shadow border border-gray-100 hover:shadow-md transition">
+                      <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center shrink-0">
+                        <span className="text-emerald-700 font-bold">₹</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-gray-500 font-medium">Consultation Fee</p>
+                        {isEditing ? (
+                          <input
+                            type="number"
+                            name="consultationFee"
+                            min={0}
+                            value={(formData as any).consultationFee}
+                            onChange={handleChange}
+                            className="w-full mt-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          />
+                        ) : (
+                          <p className="text-gray-800 font-medium">
+                            {profile.consultationFee != null ? `₹${profile.consultationFee}` : "Not available"}
                           </p>
                         )}
                       </div>

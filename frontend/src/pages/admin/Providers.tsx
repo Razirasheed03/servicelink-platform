@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import AdminLayout from "@/components/admin/AdminLayout";
+import ConfirmationModal from "@/components/common/ConfirmationModal";
+import RejectionReasonModal from "@/components/common/RejectionReasonModal";
 import userService, {
 	type AdminProviderView,
 	type AdminProvidersResponse,
@@ -12,6 +15,15 @@ export default function AdminProvidersPage() {
 	const [page, setPage] = useState(1);
 	const [totalPages, setTotalPages] = useState(1);
 	const [providers, setProviders] = useState<AdminProviderView[]>([]);
+	const [confirmState, setConfirmState] = useState<{ open: boolean; providerId: string | null; nextBlocked: boolean }>({
+		open: false,
+		providerId: null,
+		nextBlocked: false,
+	});
+	const [rejectState, setRejectState] = useState<{ open: boolean; providerId: string | null }>({
+		open: false,
+		providerId: null,
+	});
 
 	const load = async (nextPage: number) => {
 		setLoading(true);
@@ -47,28 +59,27 @@ export default function AdminProvidersPage() {
 		await load(page);
 	};
 
-	const handleReject = async (providerId: string) => {
-		const reason = window.prompt("Rejection reason (required):");
-		if (!reason || !reason.trim()) {
-			toast.error("Rejection reason is required");
-			return;
-		}
-		const res = await userService.rejectProvider(providerId, reason.trim());
+	const handleRejectSubmit = async (reason: string) => {
+		if (!rejectState.providerId) return;
+		const res = await userService.rejectProvider(rejectState.providerId, reason);
 		if (!res?.success) {
 			toast.error(res?.message || "Failed to reject");
 			return;
 		}
 		toast.success("Provider rejected");
+		setRejectState({ open: false, providerId: null });
 		await load(page);
 	};
 
-	const handleToggleBlock = async (providerId: string, nextBlocked: boolean) => {
-		const res = await userService.setProviderBlocked(providerId, nextBlocked);
+	const handleConfirmBlock = async () => {
+		if (!confirmState.providerId) return;
+		const res = await userService.setProviderBlocked(confirmState.providerId, confirmState.nextBlocked);
 		if (!res?.success) {
 			toast.error(res?.message || "Failed to update block status");
 			return;
 		}
-		toast.success(nextBlocked ? "Provider blocked" : "Provider unblocked");
+		toast.success(confirmState.nextBlocked ? "Provider blocked" : "Provider unblocked");
+		setConfirmState({ open: false, providerId: null, nextBlocked: confirmState.nextBlocked });
 		await load(page);
 	};
 
@@ -76,17 +87,10 @@ export default function AdminProvidersPage() {
 	const canNext = page < totalPages;
 
 	return (
-		<div className="min-h-screen bg-gray-50">
-			<AdminHeader />
-
-			<main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-				<div className="flex items-center justify-between mb-6">
-					<h2 className="text-2xl font-bold text-gray-900">Provider Management</h2>
-					<div className="flex items-center gap-2">
-						<button className="nav-btn" onClick={() => navigate("/admin/dashboard")}>Dashboard</button>
-						<button className="nav-btn" onClick={() => navigate("/admin/users")}>Users</button>
-					</div>
-				</div>
+		<AdminLayout>
+			<div className="flex items-center justify-between mb-6">
+				<h2 className="text-2xl font-bold text-gray-900">Provider Management</h2>
+			</div>
 
 				<div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
 					<div className="p-4 border-b border-gray-100 flex items-center justify-between">
@@ -107,13 +111,24 @@ export default function AdminProvidersPage() {
 								</tr>
 							</thead>
 							<tbody>
-								{providers.map((p) => (
-									<tr key={p._id} className="border-t border-gray-100">
-										<td className="px-4 py-3 font-medium text-gray-900">{p.username}</td>
+								{providers.map((p) => {
+									const verificationStatus = p.verificationStatus || "pending";
+									const isApproved = verificationStatus === "approved";
+									const isRejected = verificationStatus === "rejected";
+									return (
+										<tr key={p._id} className="border-t border-gray-100">
+										<td className="px-4 py-3 font-medium text-gray-900">
+											<button
+												onClick={() => navigate(`/admin/providers/${p._id}`)}
+												className="text-left hover:underline"
+											>
+												{p.username}
+											</button>
+										</td>
 										<td className="px-4 py-3 text-gray-700">{p.email}</td>
 										<td className="px-4 py-3 text-gray-700">{p.serviceType || "-"}</td>
 										<td className="px-4 py-3 text-gray-700">
-											<div className="capitalize">{p.verificationStatus || "pending"}</div>
+											<div className="capitalize">{verificationStatus}</div>
 											{p.verificationStatus === "rejected" && p.verificationReason ? (
 												<div className="text-xs text-gray-500 mt-1">{p.verificationReason}</div>
 											) : null}
@@ -122,27 +137,30 @@ export default function AdminProvidersPage() {
 										<td className="px-4 py-3">
 											<div className="flex items-center gap-2">
 												<button
-													className="px-3 py-1 rounded-lg border border-green-300 text-green-700 hover:bg-green-50"
+													disabled={isApproved}
+													className="px-3 py-1 rounded-lg border border-green-300 text-green-700 hover:bg-green-50 disabled:opacity-50 disabled:cursor-not-allowed"
 													onClick={() => handleApprove(p._id)}
 												>
 													Approve
 												</button>
 												<button
-													className="px-3 py-1 rounded-lg border border-rose-300 text-rose-700 hover:bg-rose-50"
-													onClick={() => handleReject(p._id)}
+													disabled={isRejected}
+													className="px-3 py-1 rounded-lg border border-rose-300 text-rose-700 hover:bg-rose-50 disabled:opacity-50 disabled:cursor-not-allowed"
+													onClick={() => setRejectState({ open: true, providerId: p._id })}
 												>
 													Reject
 												</button>
 												<button
 													className="px-3 py-1 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
-													onClick={() => handleToggleBlock(p._id, !p.isBlocked)}
+													onClick={() => setConfirmState({ open: true, providerId: p._id, nextBlocked: !p.isBlocked })}
 												>
 													{p.isBlocked ? "Unblock" : "Block"}
 												</button>
 											</div>
 										</td>
-									</tr>
-								))}
+										</tr>
+									);
+								})}
 							</tbody>
 						</table>
 					</div>
@@ -164,19 +182,26 @@ export default function AdminProvidersPage() {
 						</button>
 					</div>
 				</div>
-			</main>
-		</div>
-	);
-}
 
-function AdminHeader() {
-	return (
-		<header className="bg-white shadow-sm sticky top-0 z-50">
-			<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-				<div className="flex items-center justify-between h-16">
-					<h1 className="text-xl font-bold text-gray-900">Admin</h1>
-				</div>
-			</div>
-		</header>
+				<ConfirmationModal
+					isOpen={confirmState.open}
+					title={confirmState.nextBlocked ? "Block Provider" : "Unblock Provider"}
+					description={
+						confirmState.nextBlocked
+							? "Are you sure you want to block this provider?"
+							: "Are you sure you want to unblock this provider?"
+					}
+					confirmText={confirmState.nextBlocked ? "Block" : "Unblock"}
+					confirmVariant={confirmState.nextBlocked ? "danger" : "primary"}
+					onConfirm={handleConfirmBlock}
+					onClose={() => setConfirmState({ open: false, providerId: null, nextBlocked: confirmState.nextBlocked })}
+				/>
+
+				<RejectionReasonModal
+					isOpen={rejectState.open}
+					onClose={() => setRejectState({ open: false, providerId: null })}
+					onSubmit={handleRejectSubmit}
+				/>
+		</AdminLayout>
 	);
 }

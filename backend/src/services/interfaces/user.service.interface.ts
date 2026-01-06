@@ -6,6 +6,7 @@ export type UpdateProfileInput = Partial<Pick<IUserModel,
   | "serviceType"
   | "location"
   | "experience"
+	| "consultationFee"
 >>;
 
 export interface IUserService {
