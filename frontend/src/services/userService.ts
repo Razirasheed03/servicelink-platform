@@ -50,6 +50,64 @@ export type ProviderDashboardResponse = {
 	completedJobs: number;
 };
 
+export type VerificationStatus = "pending" | "approved" | "rejected";
+
+export type AdminDashboardStats = {
+	totalUsers: number;
+	totalProviders: number;
+	verifiedProviders: number;
+	pendingVerifications: number;
+};
+
+export type AdminProviderView = {
+	_id: string;
+	username: string;
+	email: string;
+	serviceType?: string;
+	isBlocked?: boolean;
+	isVerified?: boolean;
+	verificationStatus?: VerificationStatus;
+	verificationReason?: string;
+};
+
+export type AdminUserView = {
+	_id: string;
+	username: string;
+	email: string;
+	isBlocked?: boolean;
+};
+
+export type AdminProvidersResponse = {
+	providers: AdminProviderView[];
+	total: number;
+	page: number;
+	totalPages: number;
+};
+
+export type AdminUsersResponse = {
+	users: AdminUserView[];
+	total: number;
+	page: number;
+	totalPages: number;
+};
+
+export type ProfileResponse = {
+	user: {
+		_id?: string;
+		username?: string;
+		email?: string;
+		role?: "user" | "service_provider" | "admin";
+		phone?: string;
+		serviceType?: string;
+		experience?: number;
+		location?: string;
+		isBlocked?: boolean;
+		isVerified?: boolean;
+		verificationStatus?: VerificationStatus;
+		verificationReason?: string;
+	};
+};
+
 const userService = {
   login: async (email: string, password: string) => {
     try {
@@ -72,6 +130,123 @@ const userService = {
 			return {
 				success: false,
 				message: error?.response?.data?.message || "Failed to edit review",
+				data: null,
+			};
+		}
+	},
+
+	getProfile: async () => {
+		try {
+			const res = await httpClient.get("/user/profile");
+			return res.data as { success: boolean; data: ProfileResponse };
+		} catch (error: any) {
+			return {
+				success: false,
+				message: error?.response?.data?.message || "Failed to fetch profile",
+				data: null,
+			};
+		}
+	},
+
+	reapplyProviderVerification: async () => {
+		try {
+			const res = await httpClient.post("/user/provider/reapply-verification");
+			return res.data;
+		} catch (error: any) {
+			return {
+				success: false,
+				message: error?.response?.data?.message || "Failed to reapply verification",
+				data: null,
+			};
+		}
+	},
+
+	getAdminDashboard: async () => {
+		try {
+			const res = await httpClient.get("/admin/dashboard");
+			return res.data as { success: boolean; data: AdminDashboardStats };
+		} catch (error: any) {
+			return {
+				success: false,
+				message: error?.response?.data?.message || "Failed to fetch dashboard",
+				data: null,
+			};
+		}
+	},
+
+	getAdminProviders: async (params: { page?: number; limit?: number }) => {
+		try {
+			const res = await httpClient.get("/admin/providers", { params });
+			return res.data as { success: boolean; data: AdminProvidersResponse };
+		} catch (error: any) {
+			return {
+				success: false,
+				message: error?.response?.data?.message || "Failed to fetch providers",
+				data: null,
+			};
+		}
+	},
+
+	approveProvider: async (providerId: string) => {
+		try {
+			const res = await httpClient.patch(`/admin/providers/${providerId}/approve`);
+			return res.data;
+		} catch (error: any) {
+			return {
+				success: false,
+				message: error?.response?.data?.message || "Failed to approve provider",
+				data: null,
+			};
+		}
+	},
+
+	rejectProvider: async (providerId: string, reason: string) => {
+		try {
+			const res = await httpClient.patch(`/admin/providers/${providerId}/reject`, { reason });
+			return res.data;
+		} catch (error: any) {
+			return {
+				success: false,
+				message: error?.response?.data?.message || "Failed to reject provider",
+				data: null,
+			};
+		}
+	},
+
+	setProviderBlocked: async (providerId: string, isBlocked: boolean) => {
+		try {
+			const res = await httpClient.patch(`/admin/providers/${providerId}/block`, { isBlocked });
+			return res.data;
+		} catch (error: any) {
+			return {
+				success: false,
+				message: error?.response?.data?.message || "Failed to update provider block status",
+				data: null,
+			};
+		}
+	},
+
+	getAdminUsers: async (params: { page?: number; limit?: number }) => {
+		try {
+			const res = await httpClient.get("/admin/users", { params });
+			return res.data as { success: boolean; data: AdminUsersResponse };
+		} catch (error: any) {
+			return {
+				success: false,
+				message: error?.response?.data?.message || "Failed to fetch users",
+				data: null,
+			};
+		}
+	},
+
+	setUserBlocked: async (userId: string, isBlocked: boolean) => {
+		try {
+			const res = await httpClient.patch(`/admin/users/${userId}/block`, { isBlocked });
+			return res.data;
+		} catch (error: any) {
+			return {
+				success: false,
+				message: error?.response?.data?.message || "Failed to update user block status",
 				data: null,
 			};
 		}

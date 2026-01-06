@@ -9,4 +9,5 @@ router.get("/profile", auth_middleware_1.requireAuth, (0, asyncHandler_1.asyncHa
 router.put("/update", auth_middleware_1.requireAuth, (0, asyncHandler_1.asyncHandler)(user_di_1.userController.updateProfile));
 router.get("/providers", auth_middleware_1.requireAuth, (0, asyncHandler_1.asyncHandler)(user_di_1.userController.listProviders));
 router.get("/providers/:id", auth_middleware_1.requireAuth, (0, asyncHandler_1.asyncHandler)(user_di_1.userController.getProviderById));
+router.post("/provider/reapply-verification", auth_middleware_1.requireAuth, (0, asyncHandler_1.asyncHandler)(user_di_1.userController.reapplyVerification));
 exports.default = router;

@@ -11,6 +11,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserService = void 0;
 const roles_1 = require("../../constants/roles");
+const errors_1 = require("../../http/errors");
 class UserService {
     constructor(_userRepo) {
         this._userRepo = _userRepo;
@@ -28,6 +29,8 @@ class UserService {
             const isProvider = user.role === roles_1.UserRole.SERVICE_PROVIDER;
             // Enforce: location and experience only for service providers
             const update = {};
+            if (payload.username !== undefined)
+                update.username = payload.username;
             if (payload.phone !== undefined)
                 update.phone = payload.phone;
             if (payload.serviceType !== undefined)
@@ -59,9 +62,31 @@ class UserService {
                 return null;
             const isProvider = user.role === roles_1.UserRole.SERVICE_PROVIDER;
             const blocked = !!user.isBlocked;
+            const verified = !!user.isVerified;
+            const status = user.verificationStatus;
             if (!isProvider || blocked)
                 return null;
+            if (!verified || status !== "approved")
+                return null;
             return user;
+        });
+    }
+    reapplyVerification(providerUserId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const user = yield this._userRepo.findById(providerUserId);
+            if (!user)
+                return null;
+            if (user.role !== roles_1.UserRole.SERVICE_PROVIDER) {
+                throw new errors_1.AppError(403, "FORBIDDEN", "Forbidden");
+            }
+            if (user.isBlocked) {
+                throw new errors_1.AppError(403, "FORBIDDEN", "Forbidden");
+            }
+            return this._userRepo.updateByIdPublic(providerUserId, {
+                isVerified: false,
+                verificationStatus: "pending",
+                verificationReason: undefined,
+            });
         });
     }
 }

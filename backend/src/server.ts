@@ -7,6 +7,7 @@ import { env } from "./config/env";
 import authRoutes from "./routes/auth.route";
 import userRoutes from "./routes/user.route";
 import reviewRoutes from "./routes/review.route";
+import adminRoutes from "./routes/admin.route";
 
 const app = express();
 
@@ -37,6 +38,7 @@ connectDB()
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/reviews", reviewRoutes);
+app.use("/api/admin", adminRoutes);
 
 // Global Error Handler
 app.use((err: any, _req: any, res: any, _next: any) => {

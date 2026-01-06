@@ -2,6 +2,8 @@ import ProviderSidebar from "../../components/provider/Sidebar";
 import ProviderNavbar from "../../components/provider/Navbar";
 import { useEffect, useState } from "react";
 import userService, { type ProviderDashboardResponse } from "@/services/userService";
+import { useAuth } from "@/context/authContext";
+import { toast } from "sonner";
 import {
   ClipboardList,
   DollarSign,
@@ -11,6 +13,7 @@ import {
 } from "lucide-react";
 
 export default function ProviderHome() {
+	const { user, token, login } = useAuth();
 	const [dashboard, setDashboard] = useState<ProviderDashboardResponse>({
 		avgRating: 0,
 		totalReviews: 0,
@@ -18,9 +21,23 @@ export default function ProviderHome() {
 		completedJobs: 42,
 	});
 	const [loading, setLoading] = useState(false);
+	const [profileLoading, setProfileLoading] = useState(false);
+
+	const refreshProfile = async () => {
+		setProfileLoading(true);
+		try {
+			const res = await userService.getProfile();
+			if (res?.success && res.data?.user && token) {
+				login(token, res.data.user);
+			}
+		} finally {
+			setProfileLoading(false);
+		}
+	};
 
 	useEffect(() => {
 		let active = true;
+		refreshProfile();
 		const load = async () => {
 			setLoading(true);
 			try {
@@ -39,6 +56,16 @@ export default function ProviderHome() {
 		};
 	}, []);
 
+	const handleReapply = async () => {
+		const res = await userService.reapplyProviderVerification();
+		if (!res?.success) {
+			toast.error(res?.message || "Failed to reapply");
+			return;
+		}
+		toast.success("Re-applied for verification");
+		await refreshProfile();
+	};
+
   return (
     <div className="flex min-h-screen">
 
@@ -54,6 +81,40 @@ export default function ProviderHome() {
         {/* Content */}
         <div className="p-6 bg-linear-to-br from-blue-50 via-indigo-50 to-purple-50 flex-1">
           <div className="max-w-6xl mx-auto">
+            {user?.verificationStatus && user.verificationStatus !== "approved" ? (
+              <div
+                className={`p-4 rounded-2xl mb-6 border ${
+                  user.verificationStatus === "rejected"
+                    ? "bg-rose-50 border-rose-200"
+                    : "bg-amber-50 border-amber-200"
+                }`}
+              >
+                <div className="font-semibold text-gray-900 capitalize">
+                  Verification Status: {user.verificationStatus}
+                  {profileLoading ? "" : ""}
+                </div>
+                {user.verificationStatus === "pending" ? (
+                  <div className="text-sm text-gray-700 mt-1">
+                    Your profile is under review. You won’t appear in user listings until approved.
+                  </div>
+                ) : null}
+                {user.verificationStatus === "rejected" ? (
+                  <div className="text-sm text-gray-700 mt-1">
+                    Reason: {user.verificationReason || "Not provided"}
+                  </div>
+                ) : null}
+                {user.verificationStatus === "rejected" ? (
+                  <div className="mt-3">
+                    <button
+                      onClick={handleReapply}
+                      className="px-4 py-2 bg-indigo-600 text-white rounded-xl hover:opacity-90"
+                    >
+                      Reapply for verification
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
 
             {/* Welcome Header */}
             <div className="bg-white/80 backdrop-blur-lg p-6 rounded-3xl shadow-md mb-8 border border-white/40">

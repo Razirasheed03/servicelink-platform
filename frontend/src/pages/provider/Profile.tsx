@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { User, Mail, Phone, Briefcase, MapPin, Calendar } from 'lucide-react';
 import ProviderSidebar from '../../components/provider/Sidebar';
 import ProviderNavbar from '../../components/provider/Navbar';
@@ -18,6 +18,24 @@ interface ServiceProviderProfile {
 
 const ServiceProviderProfilePage: React.FC = () => {
   const { user, token, login } = useAuth();
+	const [profileLoading, setProfileLoading] = useState(false);
+
+	const refreshProfile = async () => {
+		setProfileLoading(true);
+		try {
+			const res = await userService.getProfile();
+			if (res?.success && res.data?.user && token) {
+				login(token, res.data.user);
+			}
+		} finally {
+			setProfileLoading(false);
+		}
+	};
+
+	useEffect(() => {
+		refreshProfile();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
 
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -123,6 +141,49 @@ const [formData, setFormData] = useState({
                 Manage your service provider information
               </p>
             </div>
+
+						{user?.verificationStatus && user.verificationStatus !== "approved" ? (
+							<div
+								className={`p-4 rounded-2xl mb-8 border ${
+									user.verificationStatus === "rejected"
+										? "bg-rose-50 border-rose-200"
+										: "bg-amber-50 border-amber-200"
+								}`}
+							>
+								<div className="font-semibold text-gray-900 capitalize">
+									Verification Status: {user.verificationStatus}
+									{profileLoading ? "" : ""}
+								</div>
+								{user.verificationStatus === "pending" ? (
+									<div className="text-sm text-gray-700 mt-1">
+										Your profile is under review. You won’t appear in user listings until approved.
+									</div>
+								) : null}
+								{user.verificationStatus === "rejected" ? (
+									<div className="text-sm text-gray-700 mt-1">
+										Reason: {user.verificationReason || "Not provided"}
+									</div>
+								) : null}
+								{user.verificationStatus === "rejected" ? (
+									<div className="mt-3">
+										<button
+											onClick={async () => {
+											const res = await userService.reapplyProviderVerification();
+											if (!res?.success) {
+												toast.error(res?.message || "Failed to reapply");
+												return;
+											}
+											toast.success("Re-applied for verification");
+											await refreshProfile();
+										}}
+											className="px-4 py-2 bg-indigo-600 text-white rounded-xl hover:opacity-90"
+										>
+											Reapply for verification
+										</button>
+									</div>
+								) : null}
+							</div>
+						) : null}
 
             {/* Profile Card */}
             <div className="bg-white/80 backdrop-blur-lg rounded-3xl shadow-md overflow-hidden border border-white/40">

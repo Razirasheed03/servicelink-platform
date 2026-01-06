@@ -4,7 +4,6 @@ import { toast } from 'sonner';
 import { 
   Wrench, 
   Search, 
-  User, 
   MapPin, 
   Zap,
   Droplet,
@@ -14,9 +13,6 @@ import {
   Sparkles,
   ChevronRight,
   Filter,
-  Menu,
-  X,
-  LogOut,
   Eye
 } from 'lucide-react';
 import userService from "@/services/userService";
@@ -44,7 +40,6 @@ export default function HomePage() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [providers, setProviders] = useState<BackendProvider[]>([]);
   const [, setLoading] = useState(false);
@@ -96,18 +91,11 @@ export default function HomePage() {
     };
   }, [searchQuery, selectedCategory]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('auth_user');
-    toast.success('Logged out successfully');
-    navigate('/auth');
-  };
-
   const totalCount = providers.length;
 
   return (
     <div className="min-h-screen bg-gray-50">
-    <UserNavbar/>
+    <UserNavbar user={user || undefined} />
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section */}

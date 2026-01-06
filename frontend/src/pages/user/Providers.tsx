@@ -7,12 +7,10 @@ import {
 	Filter,
 	Hammer,
 	MapPin,
-	Menu,
 	PaintBucket,
 	Search,
 	Sparkles,
 	Wrench,
-	X,
 	Zap,
 	Droplet,
 	Wind,
@@ -42,7 +40,6 @@ export default function ProvidersPage() {
 	const navigate = useNavigate();
 	const [searchQuery, setSearchQuery] = useState("");
 	const [selectedCategory, setSelectedCategory] = useState("All");
-	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 	const [providers, setProviders] = useState<BackendProvider[]>([]);
 	const [page, setPage] = useState(1);
 	const [totalPages, setTotalPages] = useState(1);

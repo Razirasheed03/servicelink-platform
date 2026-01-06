@@ -11,6 +11,9 @@ interface AuthUser {
   experience?: number;
   location?: string;
   isBlocked?: boolean;
+	isVerified?: boolean;
+	verificationStatus?: "pending" | "approved" | "rejected";
+	verificationReason?: string;
   createdAt?: string;
   updatedAt?: string;
 }

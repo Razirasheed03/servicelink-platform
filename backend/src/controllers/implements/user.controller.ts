@@ -60,4 +60,19 @@ export class UserController implements IUserController {
       next(err);
     }
   };
+
+	reapplyVerification = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+		try {
+			const userId = req.userId!;
+			const updated = await this._userService.reapplyVerification(userId);
+			if (!updated) {
+				ResponseHelper.notFound(res, HttpResponse.USER_NOT_FOUND);
+				return;
+			}
+			ResponseHelper.ok(res, { user: updated }, HttpResponse.RESOURCE_UPDATED);
+			return;
+		} catch (err) {
+			next(err);
+		}
+	};
 }

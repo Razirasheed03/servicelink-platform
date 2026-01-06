@@ -23,4 +23,5 @@ export interface IUserService {
     totalPages: number;
   }>;
   getProviderById(id: string): Promise<Omit<IUserModel, "password"> | null>;
+  reapplyVerification(providerUserId: string): Promise<Omit<IUserModel, "password"> | null>;
 }

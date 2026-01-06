@@ -2,6 +2,7 @@ import { IUserService, UpdateProfileInput } from "../interfaces/user.service.int
 import { IUserRepository } from "../../repositories/interface/user.repository.interface";
 import { IUserModel } from "../../models/interfaces/user.model.interface";
 import { UserRole } from "../../constants/roles";
+import { AppError } from "../../http/errors";
 
 export class UserService implements IUserService {
   constructor(private readonly _userRepo: IUserRepository) {}
@@ -58,4 +59,20 @@ export class UserService implements IUserService {
 		if (!verified || status !== "approved") return null;
     return user;
   }
+
+	async reapplyVerification(providerUserId: string): Promise<Omit<IUserModel, "password"> | null> {
+		const user = await this._userRepo.findById(providerUserId);
+		if (!user) return null;
+		if (user.role !== UserRole.SERVICE_PROVIDER) {
+			throw new AppError(403, "FORBIDDEN", "Forbidden");
+		}
+		if (user.isBlocked) {
+			throw new AppError(403, "FORBIDDEN", "Forbidden");
+		}
+		return this._userRepo.updateByIdPublic(providerUserId, {
+			isVerified: false,
+			verificationStatus: "pending",
+			verificationReason: undefined,
+		});
+	}
 }

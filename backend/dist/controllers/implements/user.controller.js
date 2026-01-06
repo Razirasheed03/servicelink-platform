@@ -68,6 +68,21 @@ class UserController {
                 next(err);
             }
         });
+        this.reapplyVerification = (req, res, next) => __awaiter(this, void 0, void 0, function* () {
+            try {
+                const userId = req.userId;
+                const updated = yield this._userService.reapplyVerification(userId);
+                if (!updated) {
+                    ResponseHelper_1.ResponseHelper.notFound(res, MessageConstant_1.HttpResponse.USER_NOT_FOUND);
+                    return;
+                }
+                ResponseHelper_1.ResponseHelper.ok(res, { user: updated }, MessageConstant_1.HttpResponse.RESOURCE_UPDATED);
+                return;
+            }
+            catch (err) {
+                next(err);
+            }
+        });
     }
 }
 exports.UserController = UserController;

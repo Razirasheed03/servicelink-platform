@@ -62,6 +62,8 @@ class UserRepository extends baseRepository_1.BaseRepository {
             const filters = {
                 role: roles_1.UserRole.SERVICE_PROVIDER,
                 isBlocked: false,
+                isVerified: true,
+                verificationStatus: "approved",
             };
             if (options.serviceType) {
                 filters.serviceType = options.serviceType;

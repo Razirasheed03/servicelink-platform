@@ -18,6 +18,13 @@ const UserSchema = new mongoose_1.Schema({
     location: { type: String },
     experience: { type: Number, min: 0 },
     isBlocked: { type: Boolean, default: false },
+    isVerified: { type: Boolean, default: false },
+    verificationStatus: {
+        type: String,
+        enum: ["pending", "approved", "rejected"],
+        default: "pending",
+    },
+    verificationReason: { type: String },
     resetPasswordToken: { type: String },
     resetPasswordExpires: { type: Date },
 }, { timestamps: true });

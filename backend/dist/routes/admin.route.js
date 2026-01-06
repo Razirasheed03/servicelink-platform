@@ -1,0 +1,15 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const express_1 = require("express");
+const auth_middleware_1 = require("../http/auth.middleware");
+const asyncHandler_1 = require("../utils/asyncHandler");
+const admin_di_1 = require("../dependencies/admin.di");
+const router = (0, express_1.Router)();
+router.get("/dashboard", auth_middleware_1.requireAuth, (0, asyncHandler_1.asyncHandler)(admin_di_1.adminController.getDashboard));
+router.get("/providers", auth_middleware_1.requireAuth, (0, asyncHandler_1.asyncHandler)(admin_di_1.adminController.listProviders));
+router.get("/users", auth_middleware_1.requireAuth, (0, asyncHandler_1.asyncHandler)(admin_di_1.adminController.listUsers));
+router.patch("/providers/:providerId/approve", auth_middleware_1.requireAuth, (0, asyncHandler_1.asyncHandler)(admin_di_1.adminController.approveProvider));
+router.patch("/providers/:providerId/reject", auth_middleware_1.requireAuth, (0, asyncHandler_1.asyncHandler)(admin_di_1.adminController.rejectProvider));
+router.patch("/users/:userId/block", auth_middleware_1.requireAuth, (0, asyncHandler_1.asyncHandler)(admin_di_1.adminController.setUserBlocked));
+router.patch("/providers/:providerId/block", auth_middleware_1.requireAuth, (0, asyncHandler_1.asyncHandler)(admin_di_1.adminController.setProviderBlocked));
+exports.default = router;
