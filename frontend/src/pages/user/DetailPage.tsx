@@ -14,6 +14,9 @@ import {
   Award,
   ArrowLeft
 } from 'lucide-react';
+import UserNavbar from '@/components/user/UserNavbar';
+import { useNavigate } from "react-router-dom";
+
 
 interface ServiceProviderProfile {
   username: string;
@@ -187,16 +190,32 @@ const ServiceProviderDetailPage: React.FC = () => {
       </div>
     );
   };
+const [user, setUser] = useState<any>(null);
+
+useEffect(() => {
+  const authUser = localStorage.getItem("auth_user");
+  if (authUser) {
+    setUser(JSON.parse(authUser));
+  }
+}, []);
+const navigate = useNavigate();
+
 
   return (
     <div className="min-h-screen bg-linear-to-br from-blue-50 via-indigo-50 to-purple-50">
       {/* Header */}
+      <UserNavbar user={user || undefined} />
+
       <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-6xl mx-auto px-4 py-4">
-          <button className="flex items-center gap-2 text-gray-600 hover:text-indigo-600 transition">
-            <ArrowLeft className="w-5 h-5" />
-            <span className="font-medium">Back to Search</span>
-          </button>
+        <button
+  onClick={() => navigate(-1)}
+  className="flex items-center gap-2 text-gray-600 hover:text-indigo-600 transition"
+>
+  <ArrowLeft className="w-5 h-5" />
+  <span className="font-medium">Back to Search</span>
+</button>
+
         </div>
       </div>
 

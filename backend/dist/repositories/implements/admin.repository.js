@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AdminRepository = void 0;
 const roles_1 = require("../../constants/roles");
 const user_model_1 = require("../../models/implements/user.model");
+const subscription_1 = require("../../constants/subscription");
 class AdminRepository {
     getDashboardStats() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -36,6 +37,8 @@ class AdminRepository {
                     isBlocked: false,
                     verificationStatus: "approved",
                     isVerified: true,
+                    subscriptionStatus: subscription_1.SubscriptionStatus.ACTIVE,
+                    subscriptionEndDate: { $gt: now },
                 }),
                 user_model_1.UserModel.countDocuments({
                     role: roles_1.UserRole.SERVICE_PROVIDER,
@@ -138,6 +141,9 @@ class AdminRepository {
                 $set: {
                     isVerified: true,
                     verificationStatus: "approved",
+                    subscriptionStatus: subscription_1.SubscriptionStatus.APPROVED_BUT_UNSUBSCRIBED,
+                    subscriptionStartDate: null,
+                    subscriptionEndDate: null,
                 },
                 $unset: { verificationReason: "" },
             }, { new: true }).select("-password");

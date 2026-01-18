@@ -5,6 +5,7 @@ import { IUserRepository } from "../interface/user.repository.interface";
 import { UserModel } from "../../models/implements/user.model";
 import { UserRole } from "../../constants/roles";
 import { IUserModel } from "../../models/interfaces/user.model.interface";
+import { SubscriptionStatus } from "../../constants/subscription";
 
 export class UserRepository extends BaseRepository<IUserModel> implements IUserRepository {
   constructor() {
@@ -21,6 +22,10 @@ export class UserRepository extends BaseRepository<IUserModel> implements IUserR
 
   async findById(id: string): Promise<IUserModel | null> {
     return await this.model.findById(id);
+  }
+
+  async findProviderById(id: string): Promise<IUserModel | null> {
+    return await this.model.findOne({ _id: id, role: UserRole.SERVICE_PROVIDER });
   }
 
   async findPublicById(id: string): Promise<Omit<IUserModel, "password"> | null> {
@@ -42,6 +47,16 @@ export class UserRepository extends BaseRepository<IUserModel> implements IUserR
     return updated ? (updated.toObject() as Omit<IUserModel, "password">) : null;
   }
 
+  async updateByIdWithSubscription(
+    id: string,
+    update: Partial<IUserModel>
+  ): Promise<Omit<IUserModel, "password"> | null> {
+    const updated = await this.model
+      .findByIdAndUpdate(id, { $set: update }, { new: true, runValidators: true, context: "query" })
+      .select("-password");
+    return updated ? (updated.toObject() as Omit<IUserModel, "password">) : null;
+  }
+
   async listProviders(options: {
     search?: string;
     serviceType?: string;
@@ -57,11 +72,14 @@ export class UserRepository extends BaseRepository<IUserModel> implements IUserR
     const limit = Math.max(1, Math.min(50, options.limit || 12));
     const skip = (page - 1) * limit;
 
+    const now = new Date();
     const filters: any = {
       role: UserRole.SERVICE_PROVIDER,
       isBlocked: false,
-			isVerified: true,
-			verificationStatus: "approved",
+      isVerified: true,
+      verificationStatus: "approved",
+      subscriptionStatus: SubscriptionStatus.ACTIVE,
+      subscriptionEndDate: { $gt: now },
     };
 
     if (options.serviceType) {
@@ -95,6 +113,22 @@ export class UserRepository extends BaseRepository<IUserModel> implements IUserR
       page,
       totalPages: Math.ceil(total / limit),
     };
+  }
+
+  async markProvidersExpired(cutoffDate: Date): Promise<number> {
+    const res = await this.model.updateMany(
+      {
+        role: UserRole.SERVICE_PROVIDER,
+        subscriptionStatus: SubscriptionStatus.ACTIVE,
+        subscriptionEndDate: { $lte: cutoffDate },
+      },
+      {
+        $set: {
+          subscriptionStatus: SubscriptionStatus.EXPIRED,
+        },
+      }
+    );
+    return res.modifiedCount ?? 0;
   }
 
   async updateUserBlockStatus(userId: string, isBlocked: boolean): Promise<Omit<IUserModel, "password">> {

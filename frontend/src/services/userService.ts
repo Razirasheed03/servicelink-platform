@@ -58,6 +58,11 @@ export type ProviderDashboardResponse = {
 };
 
 export type VerificationStatus = "pending" | "approved" | "rejected";
+export type SubscriptionStatus =
+  | "PENDING_APPROVAL"
+  | "APPROVED_BUT_UNSUBSCRIBED"
+  | "ACTIVE"
+  | "EXPIRED";
 
 export type AdminDashboardStats = {
 	totalUsers: number;
@@ -125,7 +130,18 @@ export type ProfileResponse = {
 		isVerified?: boolean;
 		verificationStatus?: VerificationStatus;
 		verificationReason?: string;
+		subscriptionStatus?: SubscriptionStatus;
+		subscriptionStartDate?: string | null;
+		subscriptionEndDate?: string | null;
+		stripeCustomerId?: string;
 	};
+};
+
+export type SubscriptionStatusResponse = {
+	status: SubscriptionStatus;
+	startDate: string | null;
+	endDate: string | null;
+	message?: string;
 };
 
 const userService = {
@@ -141,6 +157,36 @@ const userService = {
       };
     }
   },
+
+	startProviderSubscription: async () => {
+		try {
+			const res = await httpClient.post("/provider/subscribe");
+			return res.data as {
+				success: boolean;
+				data?: { checkoutUrl: string; sessionId: string };
+				message?: string;
+			};
+		} catch (error: any) {
+			return {
+				success: false,
+				message: error?.response?.data?.message || "Failed to start subscription",
+				data: null,
+			};
+		}
+	},
+
+	getProviderSubscriptionStatus: async () => {
+		try {
+			const res = await httpClient.get("/provider/subscription-status");
+			return res.data as { success: boolean; data: SubscriptionStatusResponse; message?: string };
+		} catch (error: any) {
+			return {
+				success: false,
+				message: error?.response?.data?.message || "Failed to fetch subscription status",
+				data: null,
+			};
+		}
+	},
 
 	editReview: async (reviewId: string, payload: { rating: number; comment?: string }) => {
 		try {

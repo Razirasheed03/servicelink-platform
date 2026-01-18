@@ -1,7 +1,11 @@
 import ProviderSidebar from "../../components/provider/Sidebar";
 import ProviderNavbar from "../../components/provider/Navbar";
-import { useEffect, useState } from "react";
-import userService, { type ProviderDashboardResponse } from "@/services/userService";
+import { useEffect, useMemo, useState } from "react";
+import userService, {
+  type ProviderDashboardResponse,
+  type SubscriptionStatusResponse,
+  type SubscriptionStatus,
+} from "@/services/userService";
 import { useAuth } from "@/context/authContext";
 import { toast } from "sonner";
 import {
@@ -11,9 +15,11 @@ import {
   Briefcase,
   Star,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function ProviderHome() {
 	const { user, token, login } = useAuth();
+	  const navigate = useNavigate();
 	const [dashboard, setDashboard] = useState<ProviderDashboardResponse>({
 		avgRating: 0,
 		totalReviews: 0,
@@ -22,6 +28,8 @@ export default function ProviderHome() {
 	});
 	const [loading, setLoading] = useState(false);
 	const [profileLoading, setProfileLoading] = useState(false);
+	const [subscription, setSubscription] = useState<SubscriptionStatusResponse | null>(null);
+	const [subscriptionLoading, setSubscriptionLoading] = useState(false);
 
 	const refreshProfile = async () => {
 		setProfileLoading(true);
@@ -34,10 +42,47 @@ export default function ProviderHome() {
 			setProfileLoading(false);
 		}
 	};
+	interface ActionButtonProps {
+  label: string;
+  icon: any;
+  color: string;
+  onClick?: () => void;
+}
+
 
 	useEffect(() => {
 		let active = true;
 		refreshProfile();
+
+		const searchParams = new URLSearchParams(window.location.search);
+		const paymentStatus = searchParams.get("payment");
+		if (paymentStatus === "success") {
+			toast.success("Payment successful. Activating subscription...");
+		}
+		if (paymentStatus === "cancelled") {
+			toast.info("Payment cancelled");
+		}
+		if (paymentStatus) {
+			window.history.replaceState({}, "", window.location.pathname);
+		}
+
+		const loadSubscription = async () => {
+			setSubscriptionLoading(true);
+			try {
+				const res = await userService.getProviderSubscriptionStatus();
+				if (!active) return;
+				if (res?.success && res.data) {
+					setSubscription(res.data);
+				} else if (res?.message) {
+					toast.error(res.message);
+				}
+			} finally {
+				if (active) setSubscriptionLoading(false);
+			}
+		};
+
+		loadSubscription();
+
 		const load = async () => {
 			setLoading(true);
 			try {
@@ -56,6 +101,69 @@ export default function ProviderHome() {
 		};
 	}, []);
 
+	const handleSubscribe = async () => {
+		const res = await userService.startProviderSubscription();
+		if (!res?.success || !res.data?.checkoutUrl) {
+			toast.error(res?.message || "Failed to start subscription");
+			return;
+		}
+		window.location.href = res.data.checkoutUrl;
+	};
+
+	const subscriptionBanner = useMemo(() => {
+		if (subscriptionLoading) {
+			return (
+				<div className="p-4 rounded-2xl mb-6 border bg-blue-50 border-blue-200 text-blue-800">
+					Checking subscription status...
+				</div>
+			);
+		}
+		if (!subscription) return null;
+
+		const formattedEnd = subscription.endDate ? new Date(subscription.endDate).toLocaleDateString() : null;
+
+		switch (subscription.status as SubscriptionStatus) {
+			case "APPROVED_BUT_UNSUBSCRIBED":
+				return (
+					<div className="p-4 rounded-2xl mb-6 border bg-indigo-50 border-indigo-200 text-indigo-900 flex items-center justify-between gap-4">
+						<div>
+							<div className="font-semibold">Subscribe to go live</div>
+							<div className="text-sm text-indigo-800">Pay ₹199 to be listed for 30 days.</div>
+						</div>
+						<button onClick={handleSubscribe} className="px-4 py-2 bg-indigo-600 text-white rounded-xl hover:opacity-90">
+							Subscribe ₹199
+						</button>
+					</div>
+				);
+			case "EXPIRED":
+				return (
+					<div className="p-4 rounded-2xl mb-6 border bg-amber-50 border-amber-200 text-amber-900 flex items-center justify-between gap-4">
+						<div>
+							<div className="font-semibold">Subscription expired</div>
+							<div className="text-sm text-amber-800">Please renew to appear in listings.</div>
+						</div>
+						<button onClick={handleSubscribe} className="px-4 py-2 bg-amber-600 text-white rounded-xl hover:opacity-90">
+							Renew now
+						</button>
+					</div>
+				);
+			case "ACTIVE":
+				return (
+					<div className="p-4 rounded-2xl mb-6 border bg-emerald-50 border-emerald-200 text-emerald-900 flex items-center justify-between gap-4">
+						<div>
+							<div className="font-semibold">Subscription active</div>
+							<div className="text-sm text-emerald-800">Expires on {formattedEnd || "N/A"}</div>
+						</div>
+						<button onClick={handleSubscribe} className="px-4 py-2 bg-emerald-600 text-white rounded-xl hover:opacity-90">
+							Renew
+						</button>
+					</div>
+				);
+			default:
+				return null;
+		}
+	}, [subscription, subscriptionLoading]);
+
 	const handleReapply = async () => {
 		const res = await userService.reapplyProviderVerification();
 		if (!res?.success) {
@@ -65,6 +173,7 @@ export default function ProviderHome() {
 		toast.success("Re-applied for verification");
 		await refreshProfile();
 	};
+	
 
   return (
     <div className="flex min-h-screen">
@@ -81,6 +190,7 @@ export default function ProviderHome() {
         {/* Content */}
         <div className="p-6 bg-linear-to-br from-blue-50 via-indigo-50 to-purple-50 flex-1">
           <div className="max-w-6xl mx-auto">
+            {subscriptionBanner}
             {user?.verificationStatus && user.verificationStatus !== "approved" ? (
               <div
                 className={`p-4 rounded-2xl mb-6 border ${
@@ -126,13 +236,37 @@ export default function ProviderHome() {
               </p>
             </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-							<StatCard title="Completed Jobs" count={String(dashboard.completedJobs)} icon={Briefcase} color="text-blue-600" />
-							<StatCard title="Total Reviews" count={String(dashboard.totalReviews)} icon={ClipboardList} color="text-indigo-600" />
-							<StatCard title="Avg Rating" count={String(dashboard.avgRating.toFixed(1))} icon={Star} color="text-yellow-500" />
-							<StatCard title="Earnings" count={"₹12,450"} icon={DollarSign} color="text-emerald-600" />
-            </div>
+         {/* Stats */}
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+  <StatCard
+    title="Verification Status"
+    count={user?.verificationStatus === "approved" ? "Approved" : "Pending"}
+    icon={Briefcase}
+    color="text-blue-600"
+  />
+
+  <StatCard
+    title="Subscription"
+    count={subscription?.status === "ACTIVE" ? "Active" : "Inactive"}
+    icon={DollarSign}
+    color="text-emerald-600"
+  />
+
+  <StatCard
+    title="Total Reviews"
+    count={String(dashboard.totalReviews)}
+    icon={ClipboardList}
+    color="text-indigo-600"
+  />
+
+  <StatCard
+    title="Average Rating"
+    count={dashboard.avgRating ? dashboard.avgRating.toFixed(1) : "—"}
+    icon={Star}
+    color="text-yellow-500"
+  />
+</div>
+
 
             {/* Recent Jobs + Actions */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -166,10 +300,21 @@ export default function ProviderHome() {
                   Quick Actions
                 </h2>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <ActionButton label="Manage Jobs" icon={ClipboardList} color="bg-blue-600" />
-                  <ActionButton label="Edit Profile" icon={UserCog} color="bg-indigo-600" />
-                </div>
+              <div className="grid grid-cols-2 gap-4">
+  <ActionButton
+    label="View Reviews"
+    icon={ClipboardList}
+    color="bg-blue-600"
+    onClick={() => navigate("/provider/reviews")}
+  />
+  <ActionButton
+    label="Edit Profile"
+    icon={UserCog}
+    color="bg-indigo-600"
+    onClick={() => navigate("/provider/profile")}
+  />
+</div>
+
               </div>
             </div>
 
@@ -189,16 +334,21 @@ const StatCard = ({ title, count, icon: Icon, color }: any) => (
       <h3 className="text-lg font-semibold text-gray-700">{title}</h3>
       <Icon className={color} />
     </div>
-    <p className="text-3xl font-bold mt-3 text-indigo-700">{count}</p>
-    <p className="text-gray-500 text-sm mt-1">Updated</p>
+    <p className="text-2xl font-bold mt-3 text-indigo-700">{count}</p>
+    <p className="text-gray-500 text-sm mt-1">
+      Current status
+    </p>
   </div>
 );
 
-const ActionButton = ({ label, icon: Icon, color }: any) => (
+
+const ActionButton = ({ label, icon: Icon, color, onClick }: any) => (
   <button
+    onClick={onClick}
     className={`${color} text-white p-5 rounded-2xl shadow hover:opacity-90 transition flex flex-col items-center gap-2`}
   >
     <Icon className="w-5 h-5" />
     {label}
   </button>
 );
+

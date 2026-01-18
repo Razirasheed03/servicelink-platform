@@ -12,6 +12,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UserService = void 0;
 const roles_1 = require("../../constants/roles");
 const errors_1 = require("../../http/errors");
+const subscription_1 = require("../../constants/subscription");
 class UserService {
     constructor(_userRepo) {
         this._userRepo = _userRepo;
@@ -27,7 +28,6 @@ class UserService {
             if (!user)
                 return null;
             const isProvider = user.role === roles_1.UserRole.SERVICE_PROVIDER;
-            // Enforce: location and experience only for service providers
             const update = {};
             if (payload.username !== undefined)
                 update.username = payload.username;
@@ -37,7 +37,7 @@ class UserService {
                 update.serviceType = payload.serviceType;
             if (payload.consultationFee !== undefined) {
                 if (!isProvider) {
-                    // ignore
+                    // ignore for non-provider
                 }
                 else {
                     const fee = Number(payload.consultationFee);
@@ -48,8 +48,7 @@ class UserService {
             }
             if (payload.location !== undefined || payload.experience !== undefined) {
                 if (!isProvider) {
-                    // Ignore disallowed fields if not a provider
-                    // Alternatively, could throw an error; requirement is they are only for providers
+                    // ignore disallowed fields
                 }
                 else {
                     if (payload.location !== undefined)
@@ -63,11 +62,14 @@ class UserService {
     }
     listProviders(options) {
         return __awaiter(this, void 0, void 0, function* () {
+            // Ensure expired subscriptions are marked before listing
+            yield this._userRepo.markProvidersExpired(new Date());
             return this._userRepo.listProviders(options);
         });
     }
     getProviderById(id) {
         return __awaiter(this, void 0, void 0, function* () {
+            yield this._userRepo.markProvidersExpired(new Date());
             const user = yield this._userRepo.findPublicById(id);
             if (!user)
                 return null;
@@ -79,6 +81,16 @@ class UserService {
                 return null;
             if (!verified || status !== "approved")
                 return null;
+            const subscriptionStatus = user.subscriptionStatus;
+            const endDate = user.subscriptionEndDate;
+            if (subscriptionStatus !== subscription_1.SubscriptionStatus.ACTIVE)
+                return null;
+            if (endDate && new Date(endDate) <= new Date()) {
+                yield this._userRepo.updateByIdWithSubscription(id, {
+                    subscriptionStatus: subscription_1.SubscriptionStatus.EXPIRED,
+                });
+                return null;
+            }
             return user;
         });
     }
