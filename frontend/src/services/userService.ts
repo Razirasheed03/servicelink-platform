@@ -79,6 +79,21 @@ export type AdminDashboardStats = {
 	};
 };
 
+export type AdminRevenueSummary = {
+	totalIncome: number;
+	totalSubscriptions: number;
+	activeSubscriptions: number;
+	expiredSubscriptions: number;
+	revenueThisMonth: number;
+	revenueLastMonth: number;
+};
+
+export type AdminIncomePoint = {
+	period: string;
+	totalIncome: number;
+	totalSubscriptions: number;
+};
+
 export type AdminProviderView = {
 	_id: string;
 	username: string;
@@ -248,6 +263,37 @@ const userService = {
 			return {
 				success: false,
 				message: error?.response?.data?.message || "Failed to fetch dashboard",
+				data: null,
+			};
+		}
+	},
+
+	getAdminRevenueSummary: async () => {
+		try {
+			const res = await httpClient.get("/admin/dashboard/summary");
+			return res.data as { success: boolean; data: AdminRevenueSummary };
+		} catch (error: any) {
+			return {
+				success: false,
+				message: error?.response?.data?.message || "Failed to fetch revenue summary",
+				data: null,
+			};
+		}
+	},
+
+	getAdminIncome: async (params: {
+		range?: "7d" | "30d" | "12m" | "custom";
+		from?: string;
+		to?: string;
+		groupBy?: "day" | "month";
+	}) => {
+		try {
+			const res = await httpClient.get("/admin/dashboard/income", { params });
+			return res.data as { success: boolean; data: AdminIncomePoint[] };
+		} catch (error: any) {
+			return {
+				success: false,
+				message: error?.response?.data?.message || "Failed to fetch income",
 				data: null,
 			};
 		}

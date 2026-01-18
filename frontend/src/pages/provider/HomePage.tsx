@@ -42,12 +42,6 @@ export default function ProviderHome() {
 			setProfileLoading(false);
 		}
 	};
-	interface ActionButtonProps {
-  label: string;
-  icon: any;
-  color: string;
-  onClick?: () => void;
-}
 
 
 	useEffect(() => {

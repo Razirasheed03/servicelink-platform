@@ -19,6 +19,34 @@ export class AdminController implements IAdminController {
 		}
 	};
 
+	getRevenueSummary = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+		try {
+			const adminUserId = req.userId!;
+			const summary = await this.adminService.getRevenueSummary(adminUserId);
+			ResponseHelper.ok(res, summary, HttpResponse.RESOURCE_FOUND);
+			return;
+		} catch (err) {
+			next(err);
+		}
+	};
+
+	getIncome = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
+		try {
+			const adminUserId = req.userId!;
+			const { range, from, to, groupBy } = req.query as Record<string, string | undefined>;
+			const data = await this.adminService.getIncome(adminUserId, {
+				range: range as "7d" | "30d" | "12m" | "custom" | undefined,
+				from,
+				to,
+				groupBy: groupBy as "day" | "month" | undefined,
+			});
+			ResponseHelper.ok(res, data, HttpResponse.RESOURCE_FOUND);
+			return;
+		} catch (err) {
+			next(err);
+		}
+	};
+
 	getProviderById = async (req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> => {
 		try {
 			const adminUserId = req.userId!;

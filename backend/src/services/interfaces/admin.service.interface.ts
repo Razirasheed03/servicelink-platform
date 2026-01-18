@@ -3,6 +3,23 @@ import { IAdminDashboardStats } from "../../repositories/interface/admin.reposit
 
 export interface IAdminService {
 	getDashboardStats(adminUserId: string): Promise<IAdminDashboardStats>;
+	getRevenueSummary(adminUserId: string): Promise<{
+		totalIncome: number;
+		totalSubscriptions: number;
+		activeSubscriptions: number;
+		expiredSubscriptions: number;
+		revenueThisMonth: number;
+		revenueLastMonth: number;
+	}>;
+	getIncome(
+		adminUserId: string,
+		options: {
+			range?: "7d" | "30d" | "12m" | "custom";
+			from?: string;
+			to?: string;
+			groupBy?: "day" | "month";
+		}
+	): Promise<Array<{ period: string; totalIncome: number; totalSubscriptions: number }>>;
 	getProviderById(adminUserId: string, providerId: string): Promise<Omit<IUserModel, "password">>;
 	listProviders(
 		adminUserId: string,
