@@ -1,10 +1,21 @@
 import UserNavbar from "@/components/user/UserNavbar";
 import { Wrench, Users, ShieldCheck, MapPin } from "lucide-react";
+import { useEffect, useState } from "react";
+
 
 export default function AboutPage() {
+  const [user, setUser] = useState<any>(null);
+
+useEffect(() => {
+  const authUser = localStorage.getItem("auth_user");
+  if (authUser) {
+    setUser(JSON.parse(authUser));
+  }
+}, []);
+
   return (
     <div className="min-h-screen bg-gray-50">
-<UserNavbar/>
+<UserNavbar user={user || undefined} />
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center mb-14">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">

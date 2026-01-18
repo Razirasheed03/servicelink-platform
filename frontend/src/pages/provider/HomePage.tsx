@@ -15,9 +15,11 @@ import {
   Briefcase,
   Star,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function ProviderHome() {
 	const { user, token, login } = useAuth();
+	  const navigate = useNavigate();
 	const [dashboard, setDashboard] = useState<ProviderDashboardResponse>({
 		avgRating: 0,
 		totalReviews: 0,
@@ -40,6 +42,13 @@ export default function ProviderHome() {
 			setProfileLoading(false);
 		}
 	};
+	interface ActionButtonProps {
+  label: string;
+  icon: any;
+  color: string;
+  onClick?: () => void;
+}
+
 
 	useEffect(() => {
 		let active = true;
@@ -164,6 +173,7 @@ export default function ProviderHome() {
 		toast.success("Re-applied for verification");
 		await refreshProfile();
 	};
+	
 
   return (
     <div className="flex min-h-screen">
@@ -226,13 +236,37 @@ export default function ProviderHome() {
               </p>
             </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-							<StatCard title="Completed Jobs" count={String(dashboard.completedJobs)} icon={Briefcase} color="text-blue-600" />
-							<StatCard title="Total Reviews" count={String(dashboard.totalReviews)} icon={ClipboardList} color="text-indigo-600" />
-							<StatCard title="Avg Rating" count={String(dashboard.avgRating.toFixed(1))} icon={Star} color="text-yellow-500" />
-							<StatCard title="Earnings" count={"₹12,450"} icon={DollarSign} color="text-emerald-600" />
-            </div>
+         {/* Stats */}
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+  <StatCard
+    title="Verification Status"
+    count={user?.verificationStatus === "approved" ? "Approved" : "Pending"}
+    icon={Briefcase}
+    color="text-blue-600"
+  />
+
+  <StatCard
+    title="Subscription"
+    count={subscription?.status === "ACTIVE" ? "Active" : "Inactive"}
+    icon={DollarSign}
+    color="text-emerald-600"
+  />
+
+  <StatCard
+    title="Total Reviews"
+    count={String(dashboard.totalReviews)}
+    icon={ClipboardList}
+    color="text-indigo-600"
+  />
+
+  <StatCard
+    title="Average Rating"
+    count={dashboard.avgRating ? dashboard.avgRating.toFixed(1) : "—"}
+    icon={Star}
+    color="text-yellow-500"
+  />
+</div>
+
 
             {/* Recent Jobs + Actions */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -266,10 +300,21 @@ export default function ProviderHome() {
                   Quick Actions
                 </h2>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <ActionButton label="Manage Jobs" icon={ClipboardList} color="bg-blue-600" />
-                  <ActionButton label="Edit Profile" icon={UserCog} color="bg-indigo-600" />
-                </div>
+              <div className="grid grid-cols-2 gap-4">
+  <ActionButton
+    label="View Reviews"
+    icon={ClipboardList}
+    color="bg-blue-600"
+    onClick={() => navigate("/provider/reviews")}
+  />
+  <ActionButton
+    label="Edit Profile"
+    icon={UserCog}
+    color="bg-indigo-600"
+    onClick={() => navigate("/provider/profile")}
+  />
+</div>
+
               </div>
             </div>
 
@@ -289,16 +334,21 @@ const StatCard = ({ title, count, icon: Icon, color }: any) => (
       <h3 className="text-lg font-semibold text-gray-700">{title}</h3>
       <Icon className={color} />
     </div>
-    <p className="text-3xl font-bold mt-3 text-indigo-700">{count}</p>
-    <p className="text-gray-500 text-sm mt-1">Updated</p>
+    <p className="text-2xl font-bold mt-3 text-indigo-700">{count}</p>
+    <p className="text-gray-500 text-sm mt-1">
+      Current status
+    </p>
   </div>
 );
 
-const ActionButton = ({ label, icon: Icon, color }: any) => (
+
+const ActionButton = ({ label, icon: Icon, color, onClick }: any) => (
   <button
+    onClick={onClick}
     className={`${color} text-white p-5 rounded-2xl shadow hover:opacity-90 transition flex flex-col items-center gap-2`}
   >
     <Icon className="w-5 h-5" />
     {label}
   </button>
 );
+
