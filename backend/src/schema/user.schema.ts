@@ -1,6 +1,7 @@
 import { Schema, model } from "mongoose";
 import { UserRole } from "../constants/roles";
 import { IUserModel } from "../models/interfaces/user.model.interface";
+import { SubscriptionStatus } from "../constants/subscription";
 
 const UserSchema = new Schema<IUserModel>(
   {
@@ -28,8 +29,17 @@ const UserSchema = new Schema<IUserModel>(
 			default: "pending",
 		},
 		verificationReason: { type: String },
-    resetPasswordToken: { type: String },
-    resetPasswordExpires: { type: Date },
+		subscriptionStatus: {
+			type: String,
+			enum: Object.values(SubscriptionStatus),
+			default: SubscriptionStatus.PENDING_APPROVAL,
+		},
+		subscriptionStartDate: { type: Date, default: null },
+		subscriptionEndDate: { type: Date, default: null },
+		stripeCustomerId: { type: String },
+		stripeSubscriptionId: { type: String },
+		resetPasswordToken: { type: String },
+		resetPasswordExpires: { type: Date },
   },
   { timestamps: true }
 );

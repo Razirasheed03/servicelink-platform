@@ -1,6 +1,7 @@
 import { UserRole } from "../../constants/roles";
 import { UserModel } from "../../models/implements/user.model";
 import { IUserModel } from "../../models/interfaces/user.model.interface";
+import { SubscriptionStatus } from "../../constants/subscription";
 import {
 	IAdminDashboardStats,
 	IAdminRepository,
@@ -41,6 +42,8 @@ export class AdminRepository implements IAdminRepository {
 				isBlocked: false,
 				verificationStatus: "approved",
 				isVerified: true,
+				subscriptionStatus: SubscriptionStatus.ACTIVE,
+				subscriptionEndDate: { $gt: now },
 			}),
 			UserModel.countDocuments({
 				role: UserRole.SERVICE_PROVIDER,
@@ -164,6 +167,9 @@ export class AdminRepository implements IAdminRepository {
 				$set: {
 					isVerified: true,
 					verificationStatus: "approved",
+					subscriptionStatus: SubscriptionStatus.APPROVED_BUT_UNSUBSCRIBED,
+					subscriptionStartDate: null,
+					subscriptionEndDate: null,
 				},
 				$unset: { verificationReason: "" },
 			},

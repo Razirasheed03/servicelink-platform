@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.User = void 0;
 const mongoose_1 = require("mongoose");
 const roles_1 = require("../constants/roles");
+const subscription_1 = require("../constants/subscription");
 const UserSchema = new mongoose_1.Schema({
     username: { type: String, required: true },
     email: { type: String, required: true, unique: true },
@@ -26,6 +27,15 @@ const UserSchema = new mongoose_1.Schema({
         default: "pending",
     },
     verificationReason: { type: String },
+    subscriptionStatus: {
+        type: String,
+        enum: Object.values(subscription_1.SubscriptionStatus),
+        default: subscription_1.SubscriptionStatus.PENDING_APPROVAL,
+    },
+    subscriptionStartDate: { type: Date, default: null },
+    subscriptionEndDate: { type: Date, default: null },
+    stripeCustomerId: { type: String },
+    stripeSubscriptionId: { type: String },
     resetPasswordToken: { type: String },
     resetPasswordExpires: { type: Date },
 }, { timestamps: true });

@@ -1,0 +1,11 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.subscriptionController = void 0;
+const subscription_controller_1 = require("../controllers/implements/subscription.controller");
+const subscription_service_1 = require("../services/implements/subscription.service");
+const user_repository_1 = require("../repositories/implements/user.repository");
+const subscription_repository_1 = require("../repositories/implements/subscription.repository");
+const userRepo = new user_repository_1.UserRepository();
+const subscriptionRepo = new subscription_repository_1.SubscriptionRepository();
+const subscriptionService = new subscription_service_1.SubscriptionService(userRepo, subscriptionRepo);
+exports.subscriptionController = new subscription_controller_1.SubscriptionController(subscriptionService, userRepo);

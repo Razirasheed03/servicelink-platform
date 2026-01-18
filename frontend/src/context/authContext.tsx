@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from "react";
 import { type Role } from "@/types/user";
+import { type SubscriptionStatus } from "@/services/userService";
 
 interface AuthUser {
   _id?: string;
@@ -15,6 +16,11 @@ interface AuthUser {
 	isVerified?: boolean;
 	verificationStatus?: "pending" | "approved" | "rejected";
 	verificationReason?: string;
+	subscriptionStatus?: SubscriptionStatus;
+	subscriptionStartDate?: string | null;
+	subscriptionEndDate?: string | null;
+	stripeCustomerId?: string;
+	stripeSubscriptionId?: string;
   createdAt?: string;
   updatedAt?: string;
 }

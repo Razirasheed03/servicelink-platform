@@ -1,7 +1,11 @@
 import ProviderSidebar from "../../components/provider/Sidebar";
 import ProviderNavbar from "../../components/provider/Navbar";
-import { useEffect, useState } from "react";
-import userService, { type ProviderDashboardResponse } from "@/services/userService";
+import { useEffect, useMemo, useState } from "react";
+import userService, {
+  type ProviderDashboardResponse,
+  type SubscriptionStatusResponse,
+  type SubscriptionStatus,
+} from "@/services/userService";
 import { useAuth } from "@/context/authContext";
 import { toast } from "sonner";
 import {
@@ -22,6 +26,8 @@ export default function ProviderHome() {
 	});
 	const [loading, setLoading] = useState(false);
 	const [profileLoading, setProfileLoading] = useState(false);
+	const [subscription, setSubscription] = useState<SubscriptionStatusResponse | null>(null);
+	const [subscriptionLoading, setSubscriptionLoading] = useState(false);
 
 	const refreshProfile = async () => {
 		setProfileLoading(true);
@@ -38,6 +44,36 @@ export default function ProviderHome() {
 	useEffect(() => {
 		let active = true;
 		refreshProfile();
+
+		const searchParams = new URLSearchParams(window.location.search);
+		const paymentStatus = searchParams.get("payment");
+		if (paymentStatus === "success") {
+			toast.success("Payment successful. Activating subscription...");
+		}
+		if (paymentStatus === "cancelled") {
+			toast.info("Payment cancelled");
+		}
+		if (paymentStatus) {
+			window.history.replaceState({}, "", window.location.pathname);
+		}
+
+		const loadSubscription = async () => {
+			setSubscriptionLoading(true);
+			try {
+				const res = await userService.getProviderSubscriptionStatus();
+				if (!active) return;
+				if (res?.success && res.data) {
+					setSubscription(res.data);
+				} else if (res?.message) {
+					toast.error(res.message);
+				}
+			} finally {
+				if (active) setSubscriptionLoading(false);
+			}
+		};
+
+		loadSubscription();
+
 		const load = async () => {
 			setLoading(true);
 			try {
@@ -55,6 +91,69 @@ export default function ProviderHome() {
 			active = false;
 		};
 	}, []);
+
+	const handleSubscribe = async () => {
+		const res = await userService.startProviderSubscription();
+		if (!res?.success || !res.data?.checkoutUrl) {
+			toast.error(res?.message || "Failed to start subscription");
+			return;
+		}
+		window.location.href = res.data.checkoutUrl;
+	};
+
+	const subscriptionBanner = useMemo(() => {
+		if (subscriptionLoading) {
+			return (
+				<div className="p-4 rounded-2xl mb-6 border bg-blue-50 border-blue-200 text-blue-800">
+					Checking subscription status...
+				</div>
+			);
+		}
+		if (!subscription) return null;
+
+		const formattedEnd = subscription.endDate ? new Date(subscription.endDate).toLocaleDateString() : null;
+
+		switch (subscription.status as SubscriptionStatus) {
+			case "APPROVED_BUT_UNSUBSCRIBED":
+				return (
+					<div className="p-4 rounded-2xl mb-6 border bg-indigo-50 border-indigo-200 text-indigo-900 flex items-center justify-between gap-4">
+						<div>
+							<div className="font-semibold">Subscribe to go live</div>
+							<div className="text-sm text-indigo-800">Pay ₹199 to be listed for 30 days.</div>
+						</div>
+						<button onClick={handleSubscribe} className="px-4 py-2 bg-indigo-600 text-white rounded-xl hover:opacity-90">
+							Subscribe ₹199
+						</button>
+					</div>
+				);
+			case "EXPIRED":
+				return (
+					<div className="p-4 rounded-2xl mb-6 border bg-amber-50 border-amber-200 text-amber-900 flex items-center justify-between gap-4">
+						<div>
+							<div className="font-semibold">Subscription expired</div>
+							<div className="text-sm text-amber-800">Please renew to appear in listings.</div>
+						</div>
+						<button onClick={handleSubscribe} className="px-4 py-2 bg-amber-600 text-white rounded-xl hover:opacity-90">
+							Renew now
+						</button>
+					</div>
+				);
+			case "ACTIVE":
+				return (
+					<div className="p-4 rounded-2xl mb-6 border bg-emerald-50 border-emerald-200 text-emerald-900 flex items-center justify-between gap-4">
+						<div>
+							<div className="font-semibold">Subscription active</div>
+							<div className="text-sm text-emerald-800">Expires on {formattedEnd || "N/A"}</div>
+						</div>
+						<button onClick={handleSubscribe} className="px-4 py-2 bg-emerald-600 text-white rounded-xl hover:opacity-90">
+							Renew
+						</button>
+					</div>
+				);
+			default:
+				return null;
+		}
+	}, [subscription, subscriptionLoading]);
 
 	const handleReapply = async () => {
 		const res = await userService.reapplyProviderVerification();
@@ -81,6 +180,7 @@ export default function ProviderHome() {
         {/* Content */}
         <div className="p-6 bg-linear-to-br from-blue-50 via-indigo-50 to-purple-50 flex-1">
           <div className="max-w-6xl mx-auto">
+            {subscriptionBanner}
             {user?.verificationStatus && user.verificationStatus !== "approved" ? (
               <div
                 className={`p-4 rounded-2xl mb-6 border ${

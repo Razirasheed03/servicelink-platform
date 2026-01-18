@@ -14,6 +14,7 @@ exports.UserRepository = void 0;
 const baseRepository_1 = require("../baseRepository");
 const user_model_1 = require("../../models/implements/user.model");
 const roles_1 = require("../../constants/roles");
+const subscription_1 = require("../../constants/subscription");
 class UserRepository extends baseRepository_1.BaseRepository {
     constructor() {
         super(user_model_1.UserModel);
@@ -36,6 +37,11 @@ class UserRepository extends baseRepository_1.BaseRepository {
             return yield this.model.findById(id);
         });
     }
+    findProviderById(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield this.model.findOne({ _id: id, role: roles_1.UserRole.SERVICE_PROVIDER });
+        });
+    }
     findPublicById(id) {
         return __awaiter(this, void 0, void 0, function* () {
             const user = yield this.model.findById(id).select("-password");
@@ -54,16 +60,27 @@ class UserRepository extends baseRepository_1.BaseRepository {
             return updated ? updated.toObject() : null;
         });
     }
+    updateByIdWithSubscription(id, update) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const updated = yield this.model
+                .findByIdAndUpdate(id, { $set: update }, { new: true, runValidators: true, context: "query" })
+                .select("-password");
+            return updated ? updated.toObject() : null;
+        });
+    }
     listProviders(options) {
         return __awaiter(this, void 0, void 0, function* () {
             const page = Math.max(1, options.page || 1);
             const limit = Math.max(1, Math.min(50, options.limit || 12));
             const skip = (page - 1) * limit;
+            const now = new Date();
             const filters = {
                 role: roles_1.UserRole.SERVICE_PROVIDER,
                 isBlocked: false,
                 isVerified: true,
                 verificationStatus: "approved",
+                subscriptionStatus: subscription_1.SubscriptionStatus.ACTIVE,
+                subscriptionEndDate: { $gt: now },
             };
             if (options.serviceType) {
                 filters.serviceType = options.serviceType;
@@ -93,6 +110,21 @@ class UserRepository extends baseRepository_1.BaseRepository {
                 page,
                 totalPages: Math.ceil(total / limit),
             };
+        });
+    }
+    markProvidersExpired(cutoffDate) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var _a;
+            const res = yield this.model.updateMany({
+                role: roles_1.UserRole.SERVICE_PROVIDER,
+                subscriptionStatus: subscription_1.SubscriptionStatus.ACTIVE,
+                subscriptionEndDate: { $lte: cutoffDate },
+            }, {
+                $set: {
+                    subscriptionStatus: subscription_1.SubscriptionStatus.EXPIRED,
+                },
+            });
+            return (_a = res.modifiedCount) !== null && _a !== void 0 ? _a : 0;
         });
     }
     updateUserBlockStatus(userId, isBlocked) {

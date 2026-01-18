@@ -3,6 +3,7 @@ import { IUserRepository } from "../../repositories/interface/user.repository.in
 import { IUserModel } from "../../models/interfaces/user.model.interface";
 import { UserRole } from "../../constants/roles";
 import { AppError, ValidationAppError } from "../../http/errors";
+import { SubscriptionStatus } from "../../constants/subscription";
 
 export class UserService implements IUserService {
   constructor(private readonly _userRepo: IUserRepository) {}
@@ -20,7 +21,6 @@ export class UserService implements IUserService {
 
     const isProvider = user.role === UserRole.SERVICE_PROVIDER;
 
-    // Enforce: location and experience only for service providers
     const update: Partial<IUserModel> = {};
     if (payload.username !== undefined) update.username = payload.username;
     if (payload.phone !== undefined) update.phone = payload.phone;
@@ -28,7 +28,7 @@ export class UserService implements IUserService {
 
 		if (payload.consultationFee !== undefined) {
 			if (!isProvider) {
-				// ignore
+				// ignore for non-provider
 			} else {
 				const fee = Number(payload.consultationFee);
 				if (Number.isNaN(fee) || fee < 0) throw new ValidationAppError("Consultation fee must be a non-negative number");
@@ -38,8 +38,7 @@ export class UserService implements IUserService {
 
     if (payload.location !== undefined || payload.experience !== undefined) {
       if (!isProvider) {
-        // Ignore disallowed fields if not a provider
-        // Alternatively, could throw an error; requirement is they are only for providers
+        // ignore disallowed fields
       } else {
         if (payload.location !== undefined) update.location = payload.location;
         if (payload.experience !== undefined) update.experience = payload.experience;
@@ -55,10 +54,13 @@ export class UserService implements IUserService {
     page?: number;
     limit?: number;
   }) {
+    // Ensure expired subscriptions are marked before listing
+    await this._userRepo.markProvidersExpired(new Date());
     return this._userRepo.listProviders(options);
   }
 
   async getProviderById(id: string) {
+    await this._userRepo.markProvidersExpired(new Date());
     const user = await this._userRepo.findPublicById(id);
     if (!user) return null;
     const isProvider = (user as any).role === UserRole.SERVICE_PROVIDER;
@@ -67,6 +69,15 @@ export class UserService implements IUserService {
     const status = (user as any).verificationStatus as string | undefined;
     if (!isProvider || blocked) return null;
 		if (!verified || status !== "approved") return null;
+		const subscriptionStatus = (user as any).subscriptionStatus as SubscriptionStatus | undefined;
+		const endDate = (user as any).subscriptionEndDate as Date | undefined;
+		if (subscriptionStatus !== SubscriptionStatus.ACTIVE) return null;
+		if (endDate && new Date(endDate) <= new Date()) {
+			await this._userRepo.updateByIdWithSubscription(id, {
+				subscriptionStatus: SubscriptionStatus.EXPIRED,
+			});
+			return null;
+		}
     return user;
   }
 

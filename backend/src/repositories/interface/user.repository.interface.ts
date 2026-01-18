@@ -1,10 +1,18 @@
 import { IUserModel } from "../../models/interfaces/user.model.interface";
+
 export interface IUserRepository {
   createUser(user: IUserModel): Promise<IUserModel>;
   findByEmail(email: string): Promise<IUserModel | null>;
   findById(id: string): Promise<IUserModel | null>;
+  findProviderById(id: string): Promise<IUserModel | null>;
   findPublicById(id: string): Promise<Omit<IUserModel, "password"> | null>;
+
   updateByIdPublic(
+    id: string,
+    update: Partial<IUserModel>
+  ): Promise<Omit<IUserModel, "password"> | null>;
+
+  updateByIdWithSubscription(
     id: string,
     update: Partial<IUserModel>
   ): Promise<Omit<IUserModel, "password"> | null>;
@@ -20,6 +28,8 @@ export interface IUserRepository {
     page: number;
     totalPages: number;
   }>;
+
+  markProvidersExpired(cutoffDate: Date): Promise<number>;
 
   updateUserBlockStatus(
     userId: string,
