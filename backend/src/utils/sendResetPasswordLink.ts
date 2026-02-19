@@ -14,14 +14,14 @@ export const sendResetPasswordLink = async (
   });
 
   const mailOptions = {
-    from: `"TailMate" <${process.env.EMAIL_USER}>`,
+    from: `"ServiceLink" <${process.env.EMAIL_USER}>`,
     to,
     subject,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #333;">Password Reset Request</h2>
         <p>Hello,</p>
-        <p>We received a request to reset your password for your TailMate account.</p>
+        <p>We received a request to reset your password for your ServiceLink account.</p>
         <p>Click the button below to reset your password:</p>
         <div style="text-align: center; margin: 30px 0;">
           <a href="${resetUrl}" 
@@ -35,7 +35,7 @@ export const sendResetPasswordLink = async (
         <p>If you did not request this password reset, please ignore this email.</p>
         <hr style="margin: 30px 0; border: 1px solid #eee;">
         <p style="color: #888; font-size: 12px;">
-          This is an automated message from TailMate. Please do not reply to this email.
+          This is an automated message from ServiceLink. Please do not reply to this email.
         </p>
       </div>
     `,
@@ -43,7 +43,7 @@ export const sendResetPasswordLink = async (
     text: `
       Password Reset Request
       
-      We received a request to reset your password for your TailMate account.
+      We received a request to reset your password for your ServiceLink account.
       
       Please click on the following link to reset your password:
       ${resetUrl}

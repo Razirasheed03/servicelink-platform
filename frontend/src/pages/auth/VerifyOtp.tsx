@@ -3,10 +3,12 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import userService from '@/services/userService';
 import { Mail, Lock } from 'lucide-react';
+import { useAuth } from '@/context/authContext';
 
 export default function VerifyOtpPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -40,9 +42,12 @@ export default function VerifyOtpPage() {
 
       const { accessToken, user } = res.data;
 
-      // Save to localStorage
-      localStorage.setItem('auth_token', accessToken);
-      localStorage.setItem('auth_user', JSON.stringify(user));
+      if (!accessToken || !user) {
+        toast.error('Unexpected server response');
+        return;
+      }
+
+      login(accessToken, user);
 
       toast.success('OTP verified! Welcome to ServiceLink');
 
