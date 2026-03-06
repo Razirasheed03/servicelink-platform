@@ -20,7 +20,8 @@ export default function ServiceLinkAuthPage() {
     phone: "",
     password: "",
     confirmPassword: "",
-    serviceType: ""
+    serviceType: "",
+    customServiceType: ""
   });
 
   const handleInputChange = (
@@ -98,7 +99,9 @@ export default function ServiceLinkAuthPage() {
         confirmPassword: formData.confirmPassword,
         role: userType,
         serviceType:
-          userType === "service_provider" ? formData.serviceType : undefined
+          userType === "service_provider" 
+            ? (formData.serviceType === "other" ? formData.customServiceType : formData.serviceType) 
+            : undefined
       };
 
       const response = await userService.signup(payload);
@@ -225,21 +228,45 @@ export default function ServiceLinkAuthPage() {
 
                 {/* Service Type */}
                 {userType === "service_provider" && (
-                  <div className="relative mb-3">
-                    <Wrench className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <select
-                      name="serviceType"
-                      value={formData.serviceType}
-                      onChange={handleInputChange}
-                      className="w-full pl-11 pr-4 py-3 border-2 rounded-xl bg-white"
-                    >
-                      <option value="">Select Service Type</option>
-                      <option value="plumber">Plumber</option>
-                      <option value="electrician">Electrician</option>
-                      <option value="carpenter">Carpenter</option>
-                      <option value="cleaner">Cleaner</option>
-                    </select>
-                  </div>
+                  <>
+                    <div className="relative mb-3">
+                      <Wrench className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <select
+                        name="serviceType"
+                        value={formData.serviceType}
+                        onChange={handleInputChange}
+                        className="w-full pl-11 pr-4 py-3 border-2 rounded-xl bg-white"
+                      >
+                        <option value="">Select Service Type</option>
+                        <option value="plumber">Plumber</option>
+                        <option value="electrician">Electrician</option>
+                        <option value="carpenter">Carpenter</option>
+                        <option value="cleaner">Cleaner</option>
+                        <option value="painter">Painter</option>
+                        <option value="handyman">Handyman</option>
+                        <option value="appliance_repair">Appliance Repair</option>
+                        <option value="pest_control">Pest Control</option>
+                        <option value="locksmith">Locksmith</option>
+                        <option value="moving">Moving</option>
+                        <option value="ac_repair">AC Repair</option>
+                        <option value="other">Other (Please specify)</option>
+                      </select>
+                    </div>
+
+                    {formData.serviceType === "other" && (
+                      <div className="relative mb-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                        <Wrench className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <input
+                          type="text"
+                          name="customServiceType"
+                          placeholder="What service do you provide?"
+                          value={formData.customServiceType}
+                          onChange={handleInputChange}
+                          className="w-full pl-11 pr-4 py-3 border-2 rounded-xl focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                        />
+                      </div>
+                    )}
+                  </>
                 )}
 
                 {/* Phone */}

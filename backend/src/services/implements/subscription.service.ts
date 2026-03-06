@@ -7,7 +7,7 @@ import { SubscriptionStatus, PaymentStatus } from "../../constants/subscription"
 import { AppError, ValidationAppError } from "../../http/errors";
 
 const SUBSCRIPTION_DURATION_DAYS = 30;
-const SUBSCRIPTION_AMOUNT = 199; // INR 199 per month
+const SUBSCRIPTION_AMOUNT = 199;
 
 export class SubscriptionService implements ISubscriptionService {
   private stripe: Stripe;

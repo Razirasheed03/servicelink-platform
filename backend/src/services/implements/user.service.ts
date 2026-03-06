@@ -28,7 +28,6 @@ export class UserService implements IUserService {
 
 		if (payload.consultationFee !== undefined) {
 			if (!isProvider) {
-				// ignore for non-provider
 			} else {
 				const fee = Number(payload.consultationFee);
 				if (Number.isNaN(fee) || fee < 0) throw new ValidationAppError("Consultation fee must be a non-negative number");

@@ -17,6 +17,20 @@ interface ServiceProviderProfile {
   location?: string;
 }
 
+const STANDARD_SERVICES = [
+  "plumber",
+  "electrician",
+  "carpenter",
+  "cleaner",
+  "painter",
+  "handyman",
+  "appliance_repair",
+  "pest_control",
+  "locksmith",
+  "moving",
+  "ac_repair"
+];
+
 const ServiceProviderProfilePage: React.FC = () => {
   const { user, token, login } = useAuth();
 	const [profileLoading, setProfileLoading] = useState(false);
@@ -40,14 +54,19 @@ const ServiceProviderProfilePage: React.FC = () => {
 
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
-const [formData, setFormData] = useState({
-  username: user?.username || "",
-  phone: user?.phone || "",
-  location: user?.location || "",
-  serviceType: user?.serviceType || "",
-  experience: user?.experience ? String(user.experience) : "",
-	consultationFee: user?.consultationFee != null ? String(user.consultationFee) : "",
-});
+  const [formData, setFormData] = useState({
+    username: user?.username || "",
+    phone: user?.phone || "",
+    location: user?.location || "",
+    serviceType: user?.serviceType && STANDARD_SERVICES.includes(user.serviceType) 
+      ? user.serviceType 
+      : (user?.serviceType ? "other" : ""),
+    customServiceType: user?.serviceType && !STANDARD_SERVICES.includes(user.serviceType) 
+      ? user.serviceType 
+      : "",
+    experience: user?.experience ? String(user.experience) : "",
+    consultationFee: user?.consultationFee != null ? String(user.consultationFee) : "",
+  });
 
 
   const profile: ServiceProviderProfile = {
@@ -72,9 +91,14 @@ const [formData, setFormData] = useState({
       username: user?.username || "",
       phone: user?.phone || "",
       location: user?.location || "",
-      serviceType: user?.serviceType || "",
+      serviceType: user?.serviceType && STANDARD_SERVICES.includes(user.serviceType) 
+        ? user.serviceType 
+        : (user?.serviceType ? "other" : ""),
+      customServiceType: user?.serviceType && !STANDARD_SERVICES.includes(user.serviceType) 
+        ? user.serviceType 
+        : "",
       experience: user?.experience ? String(user.experience) : "",
-			consultationFee: user?.consultationFee != null ? String(user.consultationFee) : "",
+      consultationFee: user?.consultationFee != null ? String(user.consultationFee) : "",
     });
     setIsEditing(true);
   };
@@ -99,7 +123,9 @@ const [formData, setFormData] = useState({
         username: formData.username || undefined,
         phone: formData.phone || undefined,
         location: formData.location || undefined,
-        serviceType: formData.serviceType || undefined,
+        serviceType: formData.serviceType === "other" 
+          ? formData.customServiceType 
+          : (formData.serviceType || undefined),
         experience: formData.experience
           ? Number(formData.experience)
           : undefined,
@@ -354,18 +380,33 @@ const [formData, setFormData] = useState({
                           Service Type
                         </p>
                         {isEditing ? (
-                          <select
-                            name="serviceType"
-                            value={formData.serviceType}
-                            onChange={handleChange}
-                            className="w-full mt-1 border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                          >
-                            <option value="">Select Service Type</option>
-                            <option value="plumber">Plumber</option>
-                            <option value="electrician">Electrician</option>
-                            <option value="carpenter">Carpenter</option>
-                            <option value="cleaner">Cleaner</option>
-                          </select>
+                          <div className="space-y-2">
+                            <select
+                              name="serviceType"
+                              value={formData.serviceType}
+                              onChange={handleChange}
+                              className="w-full mt-1 border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            >
+                              <option value="">Select Service Type</option>
+                              {STANDARD_SERVICES.map(service => (
+                                <option key={service} value={service}>
+                                  {service.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                                </option>
+                              ))}
+                              <option value="other">Other</option>
+                            </select>
+
+                            {formData.serviceType === "other" && (
+                              <input
+                                type="text"
+                                name="customServiceType"
+                                placeholder="Specify service type"
+                                value={formData.customServiceType}
+                                onChange={handleChange}
+                                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 animate-in fade-in slide-in-from-top-1"
+                              />
+                            )}
+                          </div>
                         ) : (
                           <p className="text-gray-800 font-medium capitalize">
                             {profile.serviceType}

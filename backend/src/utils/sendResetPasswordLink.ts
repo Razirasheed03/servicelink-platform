@@ -1,17 +1,10 @@
-import nodemailer from "nodemailer";
+import transporter from "./mail";
 
 export const sendResetPasswordLink = async (
   to: string,
   subject: string,
   resetUrl: string  // Change this to accept just the URL
 ) => {
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
 
   const mailOptions = {
     from: `"ServiceLink" <${process.env.EMAIL_USER}>`,

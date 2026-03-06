@@ -1,13 +1,6 @@
-import nodemailer from "nodemailer";
-export const sendOtpEmail = async (to: string, otp: string) => {
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
+import transporter from "./mail";
 
+export const sendOtpEmail = async (to: string, otp: string) => {
   const mailOptions = {
     from: `"ServiceLink" <${process.env.EMAIL_USER}>`,
     to,
@@ -17,7 +10,7 @@ export const sendOtpEmail = async (to: string, otp: string) => {
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    console.log('Email sent:', info.response); 
+    console.log('Email sent:', info.response);
   } catch (err) {
     console.error('Failed to send OTP mail:', err);
     throw err;
